@@ -11,17 +11,21 @@
         android:label="fragment_home"
         tools:layout="@layout/fragment_home" >
         <action
-            android:id="@+id/action_homeFragment_to_addFragment"
-            app:destination="@id/addFragment" />
-        <action
             android:id="@+id/action_homeFragment_to_editFragment"
             app:destination="@id/editFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_contentTypeSelectionFragment"
+            app:destination="@id/contentTypeSelectionFragment" />
     </fragment>
     <fragment
         android:id="@+id/addFragment"
         android:name="com.example.noteapplicationmvvmflow.feature.add.AddFragment"
         android:label="fragment_add"
         tools:layout="@layout/fragment_add">
+        <argument
+            android:name="contentType"
+            app:argType="string"
+            android:defaultValue="text" />
 
     </fragment>
     <fragment
@@ -32,7 +36,16 @@
 
         <argument android:name="id" app:argType="integer"/>
         <argument android:name="title" app:argType="string"/>
-        <argument android:name="description" app:argType="string"/>
+        <argument android:name="textContent" app:argType="string"/>
+        <argument android:name="contentType" app:argType="string" android:defaultValue="text"/>
 
     </fragment>
+    <dialog
+        android:id="@+id/contentTypeSelectionFragment"
+        android:name="com.example.noteapplicationmvvmflow.feature.content_selection.ContentTypeSelectionFragment"
+        android:label="ContentTypeSelectionFragment" >
+        <action
+            android:id="@+id/action_contentTypeSelectionFragment_to_addFragment"
+            app:destination="@id/addFragment" />
+    </dialog>
 </navigation>

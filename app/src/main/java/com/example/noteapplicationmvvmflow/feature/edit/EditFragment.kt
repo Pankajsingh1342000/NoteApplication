@@ -31,14 +31,18 @@ class EditFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.etTitle.setText(args.title)
-        binding.etDescription.setText(args.description)
+        populateFields()
         handleBackPress()
 
     }
 
-    private fun handleBackPress() {
+    private fun populateFields() {
+        binding.etTitle.setText(args.title)
+        binding.etDescription.setText(args.textContent)
+        binding.etDescription.hint = "Enter your note content here..."
+    }
+
+/*    private fun handleBackPress() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val note = Note(
@@ -51,11 +55,46 @@ class EditFragment : Fragment() {
 
             }
         })
+    }*/
+
+    private fun handleBackPress() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                updateNoteAndNavigateBack()
+            }
+        })
+    }
+
+    private fun updateNoteAndNavigateBack() {
+        val note = createUpdatedNote()
+        if (shouldUpdateNote(note)) {
+            updateNote(note)
+        }
+        findNavController().popBackStack()
+    }
+
+    private fun createUpdatedNote(): Note {
+        return Note(
+            id = args.id,
+            title = binding.etTitle.text.toString().trim(),
+            contentType = binding.etDescription.toString().trim(),
+            textContent = binding.etDescription.text.toString().trim(),
+            audioPath = null,
+            imagePath = null,
+            drawingData = null,
+            todoItems = null,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+    }
+
+    private fun shouldUpdateNote(note: Note): Boolean {
+        return note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
     }
 
     private fun updateNote(note: Note) {
-        if (note.title.isNotBlank() && note.description.isNotBlank()) {
-            noteViewModel.update(note.copy(title = note.title, description = note.description))
+        if (note.title.isNotBlank() && note.textContent?.isNotBlank() == true) {
+            noteViewModel.update(note.copy(title = note.title, textContent = note.textContent))
         }
     }
 

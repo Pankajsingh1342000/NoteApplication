@@ -53,7 +53,8 @@ class HomeFragment : Fragment() {
                 val action = HomeFragmentDirections.actionHomeFragmentToEditFragment(
                     id = it.id,
                     title = it.title,
-                    description = it.description
+                    textContent = it.textContent ?: "",
+                    contentType = it.contentType ?: "text"
                 )
                 findNavController().navigate(action)
             }
@@ -69,7 +70,7 @@ class HomeFragment : Fragment() {
         }
 
         fab.setOnClickListener {
-            val action = HomeFragmentDirections.actionHomeFragmentToAddFragment()
+            val action = HomeFragmentDirections.actionHomeFragmentToContentTypeSelectionFragment()
             findNavController().navigate(action)
         }
     }

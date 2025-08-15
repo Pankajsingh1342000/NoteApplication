@@ -8,5 +8,12 @@ data class Note(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val title: String,
-    val description: String,
+    val contentType: String?,
+    val textContent: String?,
+    val audioPath: String?,
+    val imagePath: String?,
+    val drawingData: String?,
+    val todoItems: String?,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )

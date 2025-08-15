@@ -22,4 +22,10 @@ interface NoteDao {
 
     @Query("SELECT * FROM note_table ORDER BY id DESC")
     fun getAllNotes(): Flow<List<Note>>
+
+    @Query("SELECT * FROM note_table WHERE contentType = :contentType ORDER BY updatedAt DESC")
+    fun getNotesByType(contentType: String): Flow<List<Note>>
+
+    @Query("SELECT DISTINCT contentType FROM note_table")
+    fun getAllContentTypes(): Flow<List<String>>
 }

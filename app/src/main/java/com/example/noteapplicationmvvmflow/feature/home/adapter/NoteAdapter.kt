@@ -18,7 +18,18 @@ class NoteAdapter(
     inner class NoteViewHolder(private val binding: ItemNoteBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(note: Note) {
             binding.etTitle.text = note.title
-            binding.etDescription.text = note.description
+
+            // Display content based on type
+            val contentText = when (note.contentType) {
+                "text" -> note.textContent ?: "No content"
+                "audio" -> "🎤 Audio Note"
+                "image" -> "🖼️ Image Note"
+                "drawing" -> "✏️ Drawing Note"
+                "todo" -> "✅ Todo List"
+                else -> note.textContent ?: "No content"
+            }
+
+            binding.etDescription.text = contentText
 
             binding.ivDelete.setOnClickListener {
                 onDeleteClick(note)
@@ -51,6 +62,4 @@ class NoteAdapter(
         notes.addAll(newNotes)
         notifyDataSetChanged()
     }
-
-
 }
