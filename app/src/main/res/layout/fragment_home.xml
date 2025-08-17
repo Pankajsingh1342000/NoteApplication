@@ -13,7 +13,107 @@
         android:layout_height="match_parent"
         tools:listitem="@layout/item_note"/>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <View
+        android:id="@+id/transparent_bg"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#66000000"
+        android:visibility="invisible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintVertical_bias="0.5"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="32dp"
+        android:padding="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Add Button"
+            android:src="@drawable/ic_add"
+            app:fabSize="normal"
+            android:layout_margin="4dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Add Button"
+            android:src="@drawable/ic_text"
+            app:fabSize="normal"
+            android:visibility="invisible"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintBottom_toTopOf="@id/fab_add"
+            app:layout_constraintEnd_toEndOf="@id/fab_add"
+            app:layout_constraintStart_toStartOf="@id/fab_add"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Add Button"
+            android:src="@drawable/ic_todo"
+            app:fabSize="normal"
+            android:visibility="invisible"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintBottom_toTopOf="@id/fab_text"
+            app:layout_constraintEnd_toEndOf="@id/fab_text"
+            app:layout_constraintStart_toStartOf="@id/fab_text"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_audio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Add Button"
+            android:src="@drawable/ic_audio"
+            app:fabSize="normal"
+            android:visibility="invisible"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintBottom_toTopOf="@id/fab_list"
+            app:layout_constraintEnd_toEndOf="@id/fab_list"
+            app:layout_constraintStart_toStartOf="@id/fab_list"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Add Button"
+            android:src="@drawable/ic_image"
+            app:fabSize="normal"
+            android:visibility="invisible"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintBottom_toTopOf="@id/fab_audio"
+            app:layout_constraintEnd_toEndOf="@id/fab_audio"
+            app:layout_constraintStart_toStartOf="@id/fab_audio"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_drawing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Add Button"
+            android:src="@drawable/ic_drawing"
+            app:fabSize="normal"
+            android:visibility="invisible"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintBottom_toTopOf="@id/fab_image"
+            app:layout_constraintEnd_toEndOf="@id/fab_image"
+            app:layout_constraintStart_toStartOf="@id/fab_image"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!--<com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -22,7 +122,7 @@
         app:fabSize="normal"
         android:layout_margin="16dp"
         app:layout_constraintEnd_toEndOf="@id/rv_notes"
-        app:layout_constraintBottom_toBottomOf="@id/rv_notes"/>
+        app:layout_constraintBottom_toBottomOf="@id/rv_notes"/>-->
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

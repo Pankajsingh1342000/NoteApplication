@@ -109,7 +109,7 @@ class AudioPlayerView @JvmOverloads constructor(
         }
     }
 
-    private fun deleteAudio() {
+    fun deleteAudio() {
         try {
             if (isPlaying){
                 pauseAudio()

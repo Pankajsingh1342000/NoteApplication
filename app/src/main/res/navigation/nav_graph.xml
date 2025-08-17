@@ -14,8 +14,11 @@
             android:id="@+id/action_homeFragment_to_editFragment"
             app:destination="@id/editFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_contentTypeSelectionFragment"
-            app:destination="@id/contentTypeSelectionFragment" />
+            android:id="@+id/action_homeFragment_to_audioFragment"
+            app:destination="@id/audioFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_addFragment"
+            app:destination="@id/addFragment" />
     </fragment>
     <fragment
         android:id="@+id/addFragment"
@@ -45,17 +48,6 @@
         <argument android:name="audioPath" app:argType="string" android:defaultValue=""/>
 
     </fragment>
-    <dialog
-        android:id="@+id/contentTypeSelectionFragment"
-        android:name="com.example.noteapplicationmvvmflow.feature.content_selection.ContentTypeSelectionFragment"
-        android:label="ContentTypeSelectionFragment" >
-        <action
-            android:id="@+id/action_contentTypeSelectionFragment_to_addFragment"
-            app:destination="@id/addFragment" />
-        <action
-            android:id="@+id/action_contentTypeSelectionFragment_to_audioFragment"
-            app:destination="@id/audioFragment" />
-    </dialog>
     <fragment
         android:id="@+id/audioFragment"
         android:name="com.example.noteapplicationmvvmflow.feature.audio.AudioFragment"

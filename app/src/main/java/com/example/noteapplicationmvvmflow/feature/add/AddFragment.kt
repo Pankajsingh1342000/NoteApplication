@@ -139,6 +139,8 @@ class AddFragment : Fragment() {
         val note = createNoteFromInput()
         if (shouldSaveNote(note)) {
             saveNote(note)
+        }else {
+            audioPlayerView?.deleteAudio()
         }
         findNavController().popBackStack()
     }
