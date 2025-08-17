@@ -26,6 +26,10 @@
             android:name="contentType"
             app:argType="string"
             android:defaultValue="text" />
+        <argument
+            android:name="audioPath"
+            app:argType="string"
+            android:defaultValue="" />
 
     </fragment>
     <fragment
@@ -38,6 +42,7 @@
         <argument android:name="title" app:argType="string"/>
         <argument android:name="textContent" app:argType="string"/>
         <argument android:name="contentType" app:argType="string" android:defaultValue="text"/>
+        <argument android:name="audioPath" app:argType="string" android:defaultValue=""/>
 
     </fragment>
     <dialog
@@ -47,5 +52,18 @@
         <action
             android:id="@+id/action_contentTypeSelectionFragment_to_addFragment"
             app:destination="@id/addFragment" />
+        <action
+            android:id="@+id/action_contentTypeSelectionFragment_to_audioFragment"
+            app:destination="@id/audioFragment" />
     </dialog>
+    <fragment
+        android:id="@+id/audioFragment"
+        android:name="com.example.noteapplicationmvvmflow.feature.audio.AudioFragment"
+        android:label="AudioFragment" >
+        <action
+            android:id="@+id/action_audioFragment_to_addFragment"
+            app:destination="@id/addFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
 </navigation>

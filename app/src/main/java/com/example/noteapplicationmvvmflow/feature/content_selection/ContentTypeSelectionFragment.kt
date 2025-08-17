@@ -34,7 +34,8 @@ class ContentTypeSelectionFragment : BottomSheetDialogFragment() {
         }
 
         binding.btnAudio.setOnClickListener {
-            navigateToAddFragment(ContentType.AUDIO)
+            val action = ContentTypeSelectionFragmentDirections.actionContentTypeSelectionFragmentToAudioFragment()
+            findNavController().navigate(action)
         }
 
         binding.btnImage.setOnClickListener {

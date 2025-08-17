@@ -19,11 +19,11 @@ object NoteHelper {
         )
     }
 
-    fun createAudioNote(title: String, audioPath: String): Note {
+    fun createAudioNote(title: String, audioPath: String, textContent: String? = null): Note {
         return Note(
             title = title,
             contentType = ContentType.AUDIO.value,
-            textContent = null,
+            textContent = textContent,
             audioPath = audioPath,
             imagePath = null,
             drawingData = null,

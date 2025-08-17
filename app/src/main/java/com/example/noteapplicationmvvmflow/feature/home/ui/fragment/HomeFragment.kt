@@ -1,6 +1,7 @@
 package com.example.noteapplicationmvvmflow.feature.home.ui.fragment
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +13,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.example.noteapplicationmvvmflow.R
 import com.example.noteapplicationmvvmflow.databinding.FragmentHomeBinding
 import com.example.noteapplicationmvvmflow.feature.home.adapter.NoteAdapter
 import com.example.noteapplicationmvvmflow.viewmodel.NoteViewModel
@@ -54,7 +54,8 @@ class HomeFragment : Fragment() {
                     id = it.id,
                     title = it.title,
                     textContent = it.textContent ?: "",
-                    contentType = it.contentType ?: "text"
+                    contentType = it.contentType ?: "text",
+                    audioPath = it.audioPath ?: ""
                 )
                 findNavController().navigate(action)
             }
@@ -73,5 +74,31 @@ class HomeFragment : Fragment() {
             val action = HomeFragmentDirections.actionHomeFragmentToContentTypeSelectionFragment()
             findNavController().navigate(action)
         }
+    }
+
+    // Add this method to handle audio player cleanup
+    override fun onResume() {
+        super.onResume()
+        Log.d("HomeFragment", "Fragment resumed - resetting all audio players")
+        adapter.resetAllAudioPlayers()
+    }
+
+    // Update the existing lifecycle methods
+    override fun onPause() {
+        super.onPause()
+        Log.d("HomeFragment", "Fragment paused - pausing all audio players")
+        adapter.pauseAllAudioPlayers()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("HomeFragment", "Fragment stopped - releasing all audio players")
+        adapter.releaseAllAudioPlayers()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.d("HomeFragment", "Fragment destroyed - releasing all audio players")
+        adapter.releaseAllAudioPlayers()
     }
 }

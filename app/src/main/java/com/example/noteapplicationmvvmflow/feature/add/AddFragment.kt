@@ -1,19 +1,19 @@
 package com.example.noteapplicationmvvmflow.feature.add
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.OnBackPressedDispatcher
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.example.noteapplicationmvvmflow.R
 import com.example.noteapplicationmvvmflow.data.db.Note
 import com.example.noteapplicationmvvmflow.data.helper.NoteHelper
 import com.example.noteapplicationmvvmflow.databinding.FragmentAddBinding
+import com.example.noteapplicationmvvmflow.feature.audio.AudioPlayerView
 import com.example.noteapplicationmvvmflow.viewmodel.NoteViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -22,20 +22,21 @@ class AddFragment : Fragment() {
     private lateinit var binding: FragmentAddBinding
     private val noteViewModel: NoteViewModel by viewModels()
     private val args: AddFragmentArgs by navArgs()
+    private var audioPlayerView: AudioPlayerView? = null
+    private var audioDeleted = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View? {
-        // Inflate the layout for this fragment
         binding = FragmentAddBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        handleBackPress()
         updateUIForContentType()
+        handleBackPress()
     }
 
     private fun updateUIForContentType() {
@@ -43,32 +44,87 @@ class AddFragment : Fragment() {
             "text" -> {
                 binding.etDescription.hint = "Enter your note content here..."
                 binding.etDescription.isEnabled = true
+                binding.etDescription.minLines = 3
+                binding.etDescription.maxLines = 10
+                binding.etDescription.visibility = View.VISIBLE
+                binding.audioPlayerContainer.visibility = View.GONE
             }
             "audio" -> {
-                binding.etDescription.hint = "Audio recording will be added here"
-                binding.etDescription.isEnabled = false
+                binding.etDescription.hint = "Enter Description"
+                binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
                 binding.etDescription.maxLines = 1
+                binding.etDescription.visibility = View.VISIBLE
+
+                // Setup audio player
+                setupAudioPlayer()
             }
             "image" -> {
                 binding.etDescription.hint = "Image will be added here"
                 binding.etDescription.isEnabled = false
                 binding.etDescription.minLines = 1
                 binding.etDescription.maxLines = 1
+                binding.etDescription.visibility = View.VISIBLE
+                binding.audioPlayerContainer.visibility = View.GONE
             }
             "drawing" -> {
                 binding.etDescription.hint = "Drawing canvas will be added here"
                 binding.etDescription.isEnabled = false
                 binding.etDescription.minLines = 1
                 binding.etDescription.maxLines = 1
+                binding.etDescription.visibility = View.VISIBLE
+                binding.audioPlayerContainer.visibility = View.GONE
             }
             "todo" -> {
                 binding.etDescription.hint = "Todo list will be added here"
                 binding.etDescription.isEnabled = false
                 binding.etDescription.minLines = 1
                 binding.etDescription.maxLines = 1
+                binding.etDescription.visibility = View.VISIBLE
+                binding.audioPlayerContainer.visibility = View.GONE
             }
         }
+    }
+
+    private fun setupAudioPlayer() {
+        Log.d("AddFragment", "Setting up audio player")
+        Log.d("AddFragment", "args.audioPath: ${args.audioPath}")
+        Log.d("AddFragment", "arguments audioPath: ${arguments?.getString("audioPath")}")
+
+        // Clear any existing audio player
+        binding.audioPlayerContainer.removeAllViews()
+
+        // Create new audio player
+        audioPlayerView = AudioPlayerView(requireContext())
+        binding.audioPlayerContainer.addView(audioPlayerView)
+        binding.audioPlayerContainer.visibility = View.VISIBLE
+
+        audioPlayerView?.onAudioDeleted = {
+            onAudioDeleted()
+        }
+
+        // Set audio path from Safe Args (FIXED: Use args instead of arguments)
+        if (args.audioPath.isNotEmpty()) {
+            Log.d("AddFragment", "Setting audio path from args: ${args.audioPath}")
+            audioPlayerView?.setAudioPath(args.audioPath)
+        } else {
+            // Fallback to arguments if needed
+            val audioPath = arguments?.getString("audioPath")
+            if (!audioPath.isNullOrEmpty()) {
+                Log.d("AddFragment", "Setting audio path from arguments: $audioPath")
+                audioPlayerView?.setAudioPath(audioPath)
+            } else {
+                Log.e("AddFragment", "No audio path found!")
+            }
+        }
+    }
+
+    private fun onAudioDeleted() {
+        audioDeleted = true
+        binding.audioPlayerContainer.visibility = View.GONE
+        binding.etDescription.isEnabled = true
+        binding.etDescription.minLines = 3
+        binding.etDescription.maxLines = 10
     }
 
     private fun handleBackPress() {
@@ -91,24 +147,38 @@ class AddFragment : Fragment() {
         val title = binding.etTitle.text.toString().trim()
         val content = binding.etDescription.text.toString().trim()
 
-        return when (args.contentType) {
-            "text" -> NoteHelper.createTextNote(title, content)
-            "audio" -> NoteHelper.createAudioNote(title, "")
-            "image" -> NoteHelper.createImageNote(title, "")
-            "drawing" -> NoteHelper.createDrawingNote(title, "")
-            "todo" -> NoteHelper.createTodoNote(title, "")
+        return when {
+            audioDeleted -> {
+                NoteHelper.createTextNote(title, content)
+            }
+            args.contentType == "text" -> NoteHelper.createTextNote(title, content)
+            args.contentType == "audio" -> {
+                val audioPath = if (args.audioPath.isNotEmpty()) args.audioPath else arguments?.getString("audioPath") ?: ""
+                NoteHelper.createAudioNote(title, audioPath, content)
+            }
+            args.contentType == "image" -> NoteHelper.createImageNote(title, "")
+            args.contentType == "drawing" -> NoteHelper.createDrawingNote(title, "")
+            args.contentType == "todo" -> NoteHelper.createTodoNote(title, "")
             else -> NoteHelper.createTextNote(title, content)
         }
     }
 
     private fun shouldSaveNote(note: Note): Boolean {
-        return when (args.contentType) {
-            "text" -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
+        return when {
+            audioDeleted -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
+            args.contentType == "text" -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
+            args.contentType == "audio" -> note.title.isNotEmpty()
             else -> note.title.isNotEmpty()
         }
     }
 
     private fun saveNote(note: Note) {
         noteViewModel.insert(note)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        audioPlayerView?.release()
+        audioPlayerView = null
     }
 }
