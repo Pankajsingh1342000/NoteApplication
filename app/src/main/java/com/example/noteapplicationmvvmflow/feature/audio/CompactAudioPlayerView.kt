@@ -47,7 +47,6 @@ class CompactAudioPlayerView @JvmOverloads constructor(
         Log.d(TAG, "Setting audio path: $path")
         audioPath = path
 
-        // Validate file exists
         if (!isValidAudioFile(path)) {
             Log.e(TAG, "Audio file does not exist: $path")
             binding.btnPlayPause.isEnabled = false
@@ -72,13 +71,11 @@ class CompactAudioPlayerView @JvmOverloads constructor(
         try {
             Log.d(TAG, "Preparing MediaPlayer for path: $audioPath")
 
-            // Release any existing MediaPlayer
             mediaPlayer?.release()
 
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(audioPath)
 
-                // Set completion listener to handle when audio finishes
                 setOnCompletionListener { mp ->
                     Log.d(TAG, "Audio playback completed")
                     this@CompactAudioPlayerView.isPlaying = false
@@ -108,7 +105,7 @@ class CompactAudioPlayerView @JvmOverloads constructor(
                     true
                 }
 
-                prepareAsync() // Use async preparation
+                prepareAsync()
             }
 
         } catch (e: Exception) {
@@ -124,10 +121,9 @@ class CompactAudioPlayerView @JvmOverloads constructor(
                 if (!player.isPlaying) {
                     Log.d(TAG, "Starting audio playback")
 
-                    // If we're at the end, reset to beginning
                     if (currentPosition >= duration && duration > 0) {
                         Log.d(TAG, "Resetting audio to beginning")
-                        resetAudio() // Use the resetAudio function here
+                        resetAudio()
                     }
 
                     player.start()
@@ -222,7 +218,6 @@ class CompactAudioPlayerView @JvmOverloads constructor(
         }
     }
 
-    // Add method to reset audio to beginning
     fun resetAudio() {
         mediaPlayer?.let { player ->
             try {

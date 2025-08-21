@@ -2,7 +2,6 @@ package com.example.noteapplicationmvvmflow.repository
 
 import com.example.noteapplicationmvvmflow.data.db.Note
 import com.example.noteapplicationmvvmflow.data.db.NoteDao
-import com.example.noteapplicationmvvmflow.data.model.ContentType
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +18,4 @@ class NoteRepository @Inject constructor(
     suspend fun update(note: Note) = dao.update(note)
     suspend fun delete(note: Note) = dao.delete(note)
 
-    fun getNotesByType(contentType: ContentType): Flow<List<Note>> = dao.getNotesByType(contentType.value)
-
-    fun getAllContentTypes(): Flow<List<String>> = dao.getAllContentTypes()
 }

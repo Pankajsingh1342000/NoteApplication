@@ -33,6 +33,10 @@
             android:name="audioPath"
             app:argType="string"
             android:defaultValue="" />
+        <argument
+            android:name="imagePath"
+            app:argType="string"
+            android:defaultValue="" />
 
     </fragment>
     <fragment
@@ -46,6 +50,7 @@
         <argument android:name="textContent" app:argType="string"/>
         <argument android:name="contentType" app:argType="string" android:defaultValue="text"/>
         <argument android:name="audioPath" app:argType="string" android:defaultValue=""/>
+        <argument android:name="imagePath" app:argType="string" android:defaultValue=""/>
 
     </fragment>
     <fragment

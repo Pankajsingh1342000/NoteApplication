@@ -14,6 +14,7 @@ import com.example.noteapplicationmvvmflow.data.db.Note
 import com.example.noteapplicationmvvmflow.data.helper.NoteHelper
 import com.example.noteapplicationmvvmflow.databinding.FragmentAddBinding
 import com.example.noteapplicationmvvmflow.feature.audio.AudioPlayerView
+import com.example.noteapplicationmvvmflow.feature.image.ImagePreview
 import com.example.noteapplicationmvvmflow.viewmodel.NoteViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,7 +24,10 @@ class AddFragment : Fragment() {
     private val noteViewModel: NoteViewModel by viewModels()
     private val args: AddFragmentArgs by navArgs()
     private var audioPlayerView: AudioPlayerView? = null
+    private var imagePreviewView: ImagePreview? = null
     private var audioDeleted = false
+    private var imageDeleted = false
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -60,12 +64,14 @@ class AddFragment : Fragment() {
                 setupAudioPlayer()
             }
             "image" -> {
-                binding.etDescription.hint = "Image will be added here"
-                binding.etDescription.isEnabled = false
+                binding.etDescription.hint = "Enter Description"
+                binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
                 binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 binding.audioPlayerContainer.visibility = View.GONE
+
+                setupImagePreview()
             }
             "drawing" -> {
                 binding.etDescription.hint = "Drawing canvas will be added here"
@@ -103,12 +109,11 @@ class AddFragment : Fragment() {
             onAudioDeleted()
         }
 
-        // Set audio path from Safe Args (FIXED: Use args instead of arguments)
         if (args.audioPath.isNotEmpty()) {
             Log.d("AddFragment", "Setting audio path from args: ${args.audioPath}")
             audioPlayerView?.setAudioPath(args.audioPath)
         } else {
-            // Fallback to arguments if needed
+
             val audioPath = arguments?.getString("audioPath")
             if (!audioPath.isNullOrEmpty()) {
                 Log.d("AddFragment", "Setting audio path from arguments: $audioPath")
@@ -119,9 +124,39 @@ class AddFragment : Fragment() {
         }
     }
 
+    private fun setupImagePreview() {
+        binding.imagePreviewContainer.removeAllViews()
+        imagePreviewView = ImagePreview(requireContext())
+        binding.imagePreviewContainer.addView(imagePreviewView)
+        binding.imagePreviewContainer.visibility = View.VISIBLE
+
+        imagePreviewView?.onImageDeleted = {
+            onImageDeleted()
+        }
+
+        if (args.imagePath.isNotEmpty()) {
+            imagePreviewView?.setImage(args.imagePath)
+        } else {
+            val imagePath = arguments?.getString("imagePath")
+            if (!imagePath.isNullOrEmpty()) {
+                imagePreviewView?.setImage(imagePath)
+            } else {
+                Log.e("AddFragment", "No Image path found!")
+            }
+        }
+    }
+
     private fun onAudioDeleted() {
         audioDeleted = true
         binding.audioPlayerContainer.visibility = View.GONE
+        binding.etDescription.isEnabled = true
+        binding.etDescription.minLines = 3
+        binding.etDescription.maxLines = 10
+    }
+
+    private fun onImageDeleted() {
+        imageDeleted = true
+        binding.imagePreviewContainer.visibility = View.GONE
         binding.etDescription.isEnabled = true
         binding.etDescription.minLines = 3
         binding.etDescription.maxLines = 10
@@ -141,6 +176,7 @@ class AddFragment : Fragment() {
             saveNote(note)
         }else {
             audioPlayerView?.deleteAudio()
+            imagePreviewView?.deleteImage()
         }
         findNavController().popBackStack()
     }
@@ -153,12 +189,18 @@ class AddFragment : Fragment() {
             audioDeleted -> {
                 NoteHelper.createTextNote(title, content)
             }
+            imageDeleted -> {
+                NoteHelper.createTextNote(title, content)
+            }
             args.contentType == "text" -> NoteHelper.createTextNote(title, content)
             args.contentType == "audio" -> {
                 val audioPath = if (args.audioPath.isNotEmpty()) args.audioPath else arguments?.getString("audioPath") ?: ""
                 NoteHelper.createAudioNote(title, audioPath, content)
             }
-            args.contentType == "image" -> NoteHelper.createImageNote(title, "")
+            args.contentType == "image" -> {
+                val imagePath = if (args.imagePath.isNotEmpty()) args.imagePath else arguments?.getString("imagePath") ?: ""
+                NoteHelper.createImageNote(title, imagePath, content)
+            }
             args.contentType == "drawing" -> NoteHelper.createDrawingNote(title, "")
             args.contentType == "todo" -> NoteHelper.createTodoNote(title, "")
             else -> NoteHelper.createTextNote(title, content)
@@ -168,8 +210,10 @@ class AddFragment : Fragment() {
     private fun shouldSaveNote(note: Note): Boolean {
         return when {
             audioDeleted -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
+            imageDeleted -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
             args.contentType == "text" -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
             args.contentType == "audio" -> note.title.isNotEmpty()
+            args.contentType == "image" -> note.title.isNotEmpty()
             else -> note.title.isNotEmpty()
         }
     }

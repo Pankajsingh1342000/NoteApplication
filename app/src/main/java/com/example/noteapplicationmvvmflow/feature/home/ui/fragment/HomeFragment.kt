@@ -1,7 +1,9 @@
 package com.example.noteapplicationmvvmflow.feature.home.ui.fragment
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -10,6 +12,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -51,6 +58,29 @@ class HomeFragment : Fragment() {
         AnimationUtils.loadAnimation(requireContext(), R.anim.to_bottom_fab)
     }
 
+    private val imagePermissionRequestLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+            isGranted: Boolean ->
+        if (isGranted) {
+            selectImage()
+        }
+        else{
+            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+            findNavController().popBackStack()
+        }
+    }
+
+    private val pickImageLauncher = registerForActivityResult(PickVisualMedia()) { uri ->
+        if (uri != null) {
+            Log.d("PhotoPicker", "Selected URI: $uri")
+            navigateToAddFragment(ContentType.IMAGE, uri.toString())
+        } else {
+            Log.d("PhotoPicker", "No media selected")
+        }
+    }
+
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -81,7 +111,8 @@ class HomeFragment : Fragment() {
                     title = note.title,
                     textContent = note.textContent ?: "",
                     contentType = note.contentType ?: "text",
-                    audioPath = note.audioPath ?: ""
+                    audioPath = note.audioPath ?: "",
+                    imagePath = note.imagePath ?: ""
                 )
                 findNavController().navigate(action)
             }
@@ -108,14 +139,16 @@ class HomeFragment : Fragment() {
             if (isExpanded) shrinkFab() else expandFab()
         }
 
-        binding.fabText.setOnClickListener { navigateToAddFragment(ContentType.TEXT) }
+        binding.fabText.setOnClickListener { navigateToAddFragment(ContentType.TEXT, "") }
         binding.fabAudio.setOnClickListener {
             findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToAudioFragment())
             shrinkFab()
         }
-        binding.fabImage.setOnClickListener { navigateToAddFragment(ContentType.IMAGE) }
-        binding.fabDrawing.setOnClickListener { navigateToAddFragment(ContentType.DRAWING) }
-        binding.fabList.setOnClickListener { navigateToAddFragment(ContentType.TODO) }
+        binding.fabImage.setOnClickListener {
+            checkImagePermission()
+        }
+        binding.fabDrawing.setOnClickListener { navigateToAddFragment(ContentType.DRAWING, "") }
+        binding.fabList.setOnClickListener { navigateToAddFragment(ContentType.TODO, "") }
     }
 
     private fun shrinkFab() {
@@ -166,12 +199,35 @@ class HomeFragment : Fragment() {
             })
     }
 
-    private fun navigateToAddFragment(contentType: ContentType) {
+    private fun navigateToAddFragment(contentType: ContentType, imagePath: String) {
         val action = HomeFragmentDirections.actionHomeFragmentToAddFragment(
-            contentType = contentType.value
+            contentType = contentType.value,
+            imagePath = imagePath
         )
         findNavController().navigate(action)
         shrinkFab()
+    }
+
+    private fun checkImagePermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                selectImage()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
+                Toast.makeText(context, "Image Permission is Required", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
+            }
+            else -> {
+                imagePermissionRequestLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    private fun selectImage() {
+        pickImageLauncher.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
     }
 
     override fun onResume() {

@@ -3,10 +3,8 @@ package com.example.noteapplicationmvvmflow.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.noteapplicationmvvmflow.data.db.Note
-import com.example.noteapplicationmvvmflow.data.model.ContentType
 import com.example.noteapplicationmvvmflow.repository.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -18,10 +16,6 @@ class NoteViewModel @Inject constructor(
 ): ViewModel() {
     private val _allNotes = MutableStateFlow<List<Note>>(emptyList())
     val allNote: StateFlow<List<Note>> = _allNotes
-
-    private val _selectedContentType = MutableStateFlow(ContentType.TEXT)
-    val selectedContentType: StateFlow<ContentType> = _selectedContentType
-
 
     init {
         viewModelScope.launch {
@@ -43,12 +37,5 @@ class NoteViewModel @Inject constructor(
         repository.update(note)
     }
 
-    fun setSelectedContentType(contentType: ContentType){
-        _selectedContentType.value = contentType
-    }
-
-    fun getNotesByType(contentType: ContentType): Flow<List<Note>> {
-        return repository.getNotesByType(contentType)
-    }
 
 }

@@ -33,11 +33,11 @@ object NoteHelper {
         )
     }
 
-    fun createImageNote(title: String, imagePath: String): Note {
+    fun createImageNote(title: String, imagePath: String,textContent: String? = null): Note {
         return Note(
             title = title,
             contentType = ContentType.IMAGE.value,
-            textContent = null,
+            textContent = textContent,
             audioPath = null,
             imagePath = imagePath,
             drawingData = null,
@@ -47,7 +47,7 @@ object NoteHelper {
         )
     }
 
-    fun createDrawingNote(title: String, drawingData: String): Note {
+    fun createDrawingNote(title: String, drawingData: String,textContent: String? = null): Note {
         return Note(
             title = title,
             contentType = ContentType.DRAWING.value,
@@ -61,7 +61,7 @@ object NoteHelper {
         )
     }
 
-    fun createTodoNote(title: String, todoItems: String): Note {
+    fun createTodoNote(title: String, todoItems: String,textContent: String? = null): Note {
         return Note(
             title = title,
             contentType = ContentType.TODO.value,

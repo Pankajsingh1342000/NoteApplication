@@ -66,8 +66,10 @@ dependencies {
     // Dagger-Hilt
     implementation(libs.dagger.hilt.android)
     ksp(libs.hilt.compiler)
-
     ksp(libs.androidx.hilt.compiler)
+
+    // Coil
+    implementation(libs.coil)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

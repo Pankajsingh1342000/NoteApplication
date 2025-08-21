@@ -10,9 +10,9 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.noteapplicationmvvmflow.data.db.Note
-import com.example.noteapplicationmvvmflow.data.model.ContentType
 import com.example.noteapplicationmvvmflow.databinding.FragmentEditBinding
 import com.example.noteapplicationmvvmflow.feature.audio.AudioPlayerView
+import com.example.noteapplicationmvvmflow.feature.image.ImagePreview
 import com.example.noteapplicationmvvmflow.viewmodel.NoteViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -22,9 +22,9 @@ class EditFragment : Fragment() {
     private val noteViewModel: NoteViewModel by viewModels()
     private val args: EditFragmentArgs by navArgs()
     private var audioDeleted = false
-
-    // Audio player for audio notes
+    private var imageDeleted = false
     private var audioPlayerView: AudioPlayerView? = null
+    private var imagePreviewView: ImagePreview? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,19 +62,20 @@ class EditFragment : Fragment() {
                 binding.etDescription.minLines = 1
                 binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
+                imagePreviewView?.visibility = View.GONE
 
-                // Setup audio player
                 setupAudioPlayer()
             }
             "image" -> {
-                binding.etDescription.hint = "Image will be displayed here..."
-                binding.etDescription.isEnabled = false
+                binding.etDescription.hint = "Description"
+                binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
                 binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
 
-                // TODO: Setup image display
+                setupImagePreview()
+
             }
             "drawing" -> {
                 binding.etDescription.hint = "Drawing will be displayed here..."
@@ -84,7 +85,6 @@ class EditFragment : Fragment() {
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
 
-                // TODO: Setup drawing display
             }
             "todo" -> {
                 binding.etDescription.hint = "Todo list will be displayed here..."
@@ -94,7 +94,6 @@ class EditFragment : Fragment() {
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
 
-                // TODO: Setup todo list display
             }
             else -> {
                 binding.etDescription.hint = "Enter your note content here..."
@@ -110,7 +109,6 @@ class EditFragment : Fragment() {
     private fun setupAudioPlayer() {
         binding.audioPlayerContainer.removeAllViews()
 
-        // Create new audio player
         audioPlayerView = AudioPlayerView(requireContext())
         binding.audioPlayerContainer.addView(audioPlayerView)
         binding.audioPlayerContainer.visibility = View.VISIBLE
@@ -119,9 +117,23 @@ class EditFragment : Fragment() {
             onAudioDeleted()
         }
 
-        // Set audio path from Safe Args
         if (args.audioPath.isNotEmpty()) {
             audioPlayerView?.setAudioPath(args.audioPath)
+        }
+    }
+
+    private fun setupImagePreview() {
+        binding.imagePreviewContainer.removeAllViews()
+        imagePreviewView = ImagePreview(requireContext())
+        binding.imagePreviewContainer.addView(imagePreviewView)
+        binding.imagePreviewContainer.visibility = View.VISIBLE
+
+        imagePreviewView?.onImageDeleted = {
+            onImageDeleted()
+        }
+
+        if (args.imagePath.isNotEmpty()) {
+            imagePreviewView?.setImage(args.imagePath)
         }
     }
 
@@ -129,6 +141,15 @@ class EditFragment : Fragment() {
         audioDeleted = true
 
         binding.audioPlayerContainer.visibility = View.GONE
+        binding.etDescription.isEnabled = true
+        binding.etDescription.minLines = 3
+        binding.etDescription.maxLines = 10
+    }
+
+    private fun onImageDeleted() {
+        imageDeleted = true
+
+        binding.imagePreviewContainer.visibility = View.GONE
         binding.etDescription.isEnabled = true
         binding.etDescription.minLines = 3
         binding.etDescription.maxLines = 10
@@ -154,10 +175,10 @@ class EditFragment : Fragment() {
         return Note(
             id = args.id,
             title = binding.etTitle.text.toString().trim(),
-            contentType = if (audioDeleted) "text" else args.contentType,
+            contentType = if (audioDeleted || imageDeleted) "text" else args.contentType,
             textContent = binding.etDescription.text.toString().trim(),
             audioPath = if (audioDeleted) null else args.audioPath,
-            imagePath = null, // TODO: Add image path handling
+            imagePath = if (imageDeleted) null else args.imagePath,
             drawingData = null, // TODO: Add drawing data handling
             todoItems = null, // TODO: Add todo items handling
             createdAt = System.currentTimeMillis(),
@@ -168,8 +189,10 @@ class EditFragment : Fragment() {
     private fun shouldUpdateNote(note: Note): Boolean {
         return when {
             audioDeleted -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
+            imageDeleted -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
             args.contentType == "text" -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
-            args.contentType =="audio" -> note.title.isNotEmpty()
+            args.contentType == "audio" -> note.title.isNotEmpty()
+            args.contentType == "image" -> note.title.isNotEmpty()
             else -> note.title.isNotEmpty()
         }
     }
@@ -180,7 +203,6 @@ class EditFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Clean up audio player
         audioPlayerView?.release()
         audioPlayerView = null
     }

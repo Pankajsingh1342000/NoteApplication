@@ -8,6 +8,9 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import com.example.noteapplicationmvvmflow.R
 import com.example.noteapplicationmvvmflow.databinding.ViewAudioPlayerBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 class AudioPlayerView @JvmOverloads constructor(
@@ -42,9 +45,6 @@ class AudioPlayerView @JvmOverloads constructor(
             deleteAudio()
         }
 
-//        binding.btnStop.setOnClickListener {
-//            stopAudio()
-//        }
     }
 
     fun setAudioPath(path: String) {
@@ -56,25 +56,19 @@ class AudioPlayerView @JvmOverloads constructor(
         try {
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(audioPath)
-
-                // Add completion listener
+                setOnPreparedListener { mp ->
+                    this@AudioPlayerView.duration = mp.duration
+                    updateProgressDisplay()
+                }
                 setOnCompletionListener { mp ->
-                    Log.d("AudioPlayerView", "Audio playback completed")
                     this@AudioPlayerView.isPlaying = false
                     this@AudioPlayerView.currentPosition = 0
                     updatePlayPauseButton()
                     stopProgressUpdate()
                     updateProgressDisplay()
-                    // Reset to beginning for next play
                     mp.seekTo(0)
                 }
-
-                setOnPreparedListener { mp ->
-                    this@AudioPlayerView.duration = mp.duration
-                    updateProgressDisplay()
-                }
-
-                prepare()
+                prepareAsync()
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -84,7 +78,6 @@ class AudioPlayerView @JvmOverloads constructor(
     private fun playAudio() {
         mediaPlayer?.let { player ->
             if (!player.isPlaying) {
-                // If we're at the end, reset to beginning
                 if (currentPosition >= duration && duration > 0) {
                     currentPosition = 0
                     player.seekTo(0)
@@ -110,50 +103,26 @@ class AudioPlayerView @JvmOverloads constructor(
     }
 
     fun deleteAudio() {
-        try {
-            if (isPlaying){
-                pauseAudio()
-            }
-            mediaPlayer?.release()
-            mediaPlayer = null
-
-            audioPath?.let { path ->
-                val file = File(path)
-                if (file.exists()){
-                    file.delete()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (isPlaying){
+                    pauseAudio()
                 }
+                mediaPlayer?.release()
+                mediaPlayer = null
+
+                audioPath?.let { path ->
+                    val file = File(path)
+                    if (file.exists()){
+                        file.delete()
+                    }
+                }
+                audioPath = null
+                onAudioDeleted?.invoke()
+
+            } catch (e: Exception) {
+                Log.e("AudioPlayerView", "Error deleting audio", e)
             }
-            audioPath = null
-            onAudioDeleted?.invoke()
-
-        } catch (e: Exception) {
-            Log.e("AudioPlayerView", "Error deleting audio", e)
-        }
-    }
-
-//    private fun stopAudio() {
-//        mediaPlayer?.let { player ->
-//            player.stop()
-//            player.prepare()
-//            currentPosition = 0
-//            isPlaying = false
-//            updatePlayPauseButton()
-//            stopProgressUpdate()
-//            updateProgressDisplay()
-//        }
-//    }
-
-    fun resetAudio() {
-        mediaPlayer?.let { player ->
-            if (isPlaying) {
-                player.pause()
-                isPlaying = false
-                updatePlayPauseButton()
-                stopProgressUpdate()
-            }
-            currentPosition = 0
-            player.seekTo(0)
-            updateProgressDisplay()
         }
     }
 
@@ -163,7 +132,6 @@ class AudioPlayerView @JvmOverloads constructor(
         }else{
             binding.btnPlayPause.setImageResource(R.drawable.ic_play)
         }
-//        binding.btnPlayPause.text = if (isPlaying) "⏸️" else "▶️"
     }
 
     private fun startProgressUpdate() {

@@ -1,7 +1,6 @@
 package com.example.noteapplicationmvvmflow.feature.audio
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Bundle
@@ -116,7 +115,7 @@ class AudioFragment : Fragment() {
             updateUI()
             startTimer()
         } catch (e: IOException) {
-            Toast.makeText(context, "Failed to Start Recording", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Failed to Start Recording ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -131,7 +130,7 @@ class AudioFragment : Fragment() {
             updateUI()
             stopTimer()
         } catch (e: Exception) {
-            Toast.makeText(context, "Failed to Stop Recording", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Failed to Stop Recording ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

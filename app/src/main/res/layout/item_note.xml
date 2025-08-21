@@ -45,7 +45,6 @@
                 app:layout_constraintTop_toBottomOf="@id/et_title"
                 android:text="Description"
                 android:textSize="16sp"/>
-
             <FrameLayout
                 android:id="@+id/audio_player_container"
                 android:layout_width="match_parent"
@@ -53,6 +52,13 @@
                 app:layout_constraintTop_toBottomOf="@id/et_description"
                 android:layout_marginTop="8dp"
                 android:minHeight="0dp" />
+            <FrameLayout
+                android:id="@+id/image_preview_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/et_description"
+                android:layout_marginTop="8dp"
+                android:minHeight="0dp"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

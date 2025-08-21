@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.noteapplicationmvvmflow.data.db.Note
 import com.example.noteapplicationmvvmflow.databinding.ItemNoteBinding
 import com.example.noteapplicationmvvmflow.feature.audio.CompactAudioPlayerView
+import com.example.noteapplicationmvvmflow.feature.image.CompactImagePreview
 import kotlin.collections.mutableListOf
 
 class NoteAdapter(
@@ -18,6 +19,7 @@ class NoteAdapter(
 
     private val notes = mutableListOf<Note>()
     private val audioPlayers = mutableMapOf<Int, CompactAudioPlayerView>()
+    private val imagePreviews = mutableMapOf<Int, CompactImagePreview>()
 
     companion object {
         private const val TAG = "NoteAdapter"
@@ -27,11 +29,10 @@ class NoteAdapter(
         fun bind(note: Note) {
             binding.etTitle.text = note.title
 
-            // Clear previous content
             binding.etDescription.visibility = View.VISIBLE
             binding.audioPlayerContainer.removeAllViews()
+            binding.imagePreviewContainer.removeAllViews()
 
-            // Display content based on type
             when (note.contentType) {
                 "text" -> {
                     binding.etDescription.text = note.textContent ?: "No content"
@@ -48,8 +49,14 @@ class NoteAdapter(
                     setupAudioPlayer(note, binding)
                 }
                 "image" -> {
-                    binding.etDescription.text = "🖼️ Image Note"
+                    val description = note.textContent
+                    if (!description.isNullOrEmpty()) {
+                        binding.etDescription.text = description
+                    }else {
+                        binding.etDescription.text = "🖼️ Image Note"
+                    }
                     binding.etDescription.visibility = View.VISIBLE
+                    setupImagePreview(note, binding)
                 }
                 "drawing" -> {
                     binding.etDescription.text = "✏️ Drawing Note"
@@ -81,10 +88,8 @@ class NoteAdapter(
                 val audioPlayer = CompactAudioPlayerView(binding.root.context)
                 binding.audioPlayerContainer.addView(audioPlayer)
 
-                // Store reference to audio player
                 audioPlayers[note.id] = audioPlayer
 
-                // Set audio path
                 note.audioPath?.let { path ->
                     Log.d(TAG, "Setting audio path: $path")
                     audioPlayer.setAudioPath(path)
@@ -94,6 +99,22 @@ class NoteAdapter(
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error setting up audio player", e)
+            }
+        }
+
+        private fun setupImagePreview(note: Note, binding: ItemNoteBinding) {
+            try {
+                val imagePreview = CompactImagePreview(binding.root.context)
+                binding.imagePreviewContainer.addView(imagePreview)
+                imagePreviews[note.id] = imagePreview
+
+                note.imagePath?.let { path ->
+                    imagePreview.setImage(path)
+                } ?: run {
+                    Log.e(TAG, "Image path is null for note ID: ${note.id}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up image preview", e)
             }
         }
     }
