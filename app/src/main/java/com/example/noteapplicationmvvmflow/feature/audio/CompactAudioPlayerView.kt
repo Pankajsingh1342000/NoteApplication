@@ -255,4 +255,9 @@ class CompactAudioPlayerView @JvmOverloads constructor(
             pauseAudio()
         }
     }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        release()
+    }
 }

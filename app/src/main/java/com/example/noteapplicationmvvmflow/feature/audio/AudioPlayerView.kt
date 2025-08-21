@@ -103,26 +103,30 @@ class AudioPlayerView @JvmOverloads constructor(
     }
 
     fun deleteAudio() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                if (isPlaying){
-                    pauseAudio()
-                }
-                mediaPlayer?.release()
-                mediaPlayer = null
-
-                audioPath?.let { path ->
-                    val file = File(path)
-                    if (file.exists()){
-                        file.delete()
-                    }
-                }
-                audioPath = null
-                onAudioDeleted?.invoke()
-
-            } catch (e: Exception) {
-                Log.e("AudioPlayerView", "Error deleting audio", e)
+        try {
+            if (isPlaying) {
+                pauseAudio()
             }
+            mediaPlayer?.release()
+            mediaPlayer = null
+            audioPath = null
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    audioPath?.let { path ->
+                        val file = File(path)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("Audio Player View", "Error deleting file", e)
+                }
+            }
+
+            onAudioDeleted?.invoke()
+        } catch (e: Exception) {
+            Log.e("Audio Player View", "Error deleting audio", e)
         }
     }
 
@@ -170,8 +174,22 @@ class AudioPlayerView @JvmOverloads constructor(
     }
 
     fun release() {
-        mediaPlayer?.release()
-        mediaPlayer = null
+
+        try {
+            Log.d("Audio Player View", "Releasing MediaPlayer")
+            stopProgressUpdate()
+            mediaPlayer?.release()
+            mediaPlayer = null
+            isPlaying = false
+            currentPosition = 0
+        } catch (e: Exception) {
+            Log.e("Audio Player View", "Error releasing MediaPlayer", e)
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        release()
     }
 
 }

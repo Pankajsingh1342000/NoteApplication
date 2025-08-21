@@ -135,6 +135,21 @@ class NoteAdapter(
         return notes.size
     }
 
+    override fun onViewRecycled(holder: NoteViewHolder) {
+        super.onViewRecycled(holder)
+
+        // Clean up audio players for recycled views
+        val noteId = notes[holder.layoutPosition].id
+        audioPlayers[noteId]?.release()
+        audioPlayers.remove(noteId)
+
+        imagePreviews[noteId]?.let { preview ->
+            // Clean up image preview if needed
+            imagePreviews.remove(noteId)
+        }
+    }
+
+
     @SuppressLint("NotifyDataSetChanged")
     fun setNotes(newNotes: List<Note>) {
         Log.d(TAG, "Setting ${newNotes.size} notes")
@@ -147,6 +162,7 @@ class NoteAdapter(
 
         // Release all audio players before clearing
         releaseAllAudioPlayers()
+        imagePreviews.clear()
 
         notes.clear()
         notes.addAll(newNotes)
