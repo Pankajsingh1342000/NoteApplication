@@ -2,42 +2,62 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="8dp"
-    android:background="@drawable/compact_audio_background">
+    android:padding="2dp">
 
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center_vertical">
+        app:cardCornerRadius="8dp"
+        app:strokeColor="@color/gray_600"
+        app:strokeWidth="0.8dp"
+        app:cardBackgroundColor="@color/white">
 
-        <ImageView
-            android:id="@+id/btn_play_pause"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:src="@drawable/ic_play"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="4dp"/>
-
-        <SeekBar
-            android:id="@+id/progress_bar"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:enabled="false" />
+            android:orientation="vertical"
+            android:padding="8dp">
 
-    </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/tv_progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="00:00 / 00:00"
-        android:textSize="10sp"
-        android:layout_marginTop="2dp"
-        android:textColor="@color/black" />
+                <ImageView
+                    android:id="@+id/btn_play_pause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:src="@drawable/ic_play"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="4dp"/>
+
+                <SeekBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:enabled="false" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00 / 00:00"
+                android:textSize="10sp"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+
+    </com.google.android.material.card.MaterialCardView>
+
 
     <!-- Play/Pause Button -->
 
