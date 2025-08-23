@@ -5,10 +5,13 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import coil.load
+import coil.Coil
+import coil.ImageLoader
+import coil.request.Disposable
+import coil.request.ImageRequest
 import coil.size.Precision
 import coil.size.Scale
-import coil.size.Size
+import com.example.noteapplicationmvvmflow.R
 import com.example.noteapplicationmvvmflow.databinding.ViewImagePreviewBinding
 
 class ImagePreview@JvmOverloads constructor(
@@ -16,8 +19,11 @@ class ImagePreview@JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ): FrameLayout(context,attrs, defStyleAttr) {
-    var imagePath: String? = null
+    private var imagePath: String? = null
     private val binding: ViewImagePreviewBinding = ViewImagePreviewBinding.inflate(LayoutInflater.from(context), this, true)
+    private var currentRequest: ImageRequest? = null
+    private var currentDisposable: Disposable? = null
+    private val imageLoader: ImageLoader = Coil.imageLoader(context)
 
     var onImageDeleted : (() -> Unit)? = null
 
@@ -27,17 +33,28 @@ class ImagePreview@JvmOverloads constructor(
 
     fun setImage(imagePath: String) {
         this.imagePath = imagePath
-        binding.ivImage.load(imagePath) {
-            crossfade(false)
-            scale(Scale.FIT)
-            precision(Precision.INEXACT)
-            size(Size.ORIGINAL)
-            allowHardware(true)
-        }
+
+        currentDisposable?.dispose()
+
+        currentRequest = ImageRequest.Builder(context)
+            .data(imagePath)
+            .target(binding.ivImage)
+            .crossfade(false)
+            .scale(Scale.FIT)
+            .precision(Precision.INEXACT)
+            .size(1024, 1024)
+            .allowHardware(true)
+            .placeholder(R.drawable.ic_image)
+            .error(R.drawable.ic_image)
+            .build()
+
+        currentDisposable = imageLoader.enqueue(currentRequest!!)
     }
+    
     fun deleteImage() {
         try {
-
+            currentDisposable?.dispose()
+            
             imagePath = null
             onImageDeleted?.invoke()
 
@@ -52,4 +69,11 @@ class ImagePreview@JvmOverloads constructor(
             deleteImage()
         }
     }
+    
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        currentDisposable?.dispose()
+    }
+
+    fun getImagePath(): String? = imagePath
 }

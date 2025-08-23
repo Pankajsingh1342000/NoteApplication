@@ -19,11 +19,33 @@ class CompactAudioPlayerView @JvmOverloads constructor(
 
     private val binding: ViewCompactAudioPlayerBinding =
         ViewCompactAudioPlayerBinding.inflate(LayoutInflater.from(context), this, true)
+
     private var mediaPlayer: MediaPlayer? = null
     private var audioPath: String? = null
     private var isPlaying = false
+    private var isPrepared = false
     private var currentPosition = 0
     private var duration = 0
+
+    private val progressRunnable = object : Runnable {
+        override fun run() {
+            if (isPlaying && mediaPlayer != null) {
+                try {
+                    currentPosition = mediaPlayer?.currentPosition ?: 0
+                    updateProgressDisplay()
+
+                    if (currentPosition < duration) {
+                        postDelayed(this, 100)
+                    } else {
+                        stopProgressUpdate()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error updating progress", e)
+                    stopProgressUpdate()
+                }
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "CompactAudioPlayerView"
@@ -35,11 +57,7 @@ class CompactAudioPlayerView @JvmOverloads constructor(
 
     private fun setupClickListeners() {
         binding.btnPlayPause.setOnClickListener {
-            if (isPlaying) {
-                pauseAudio()
-            } else {
-                playAudio()
-            }
+            if (isPlaying) pauseAudio() else playAudio()
         }
     }
 
@@ -48,84 +66,78 @@ class CompactAudioPlayerView @JvmOverloads constructor(
         audioPath = path
 
         if (!isValidAudioFile(path)) {
-            Log.e(TAG, "Audio file does not exist: $path")
+            Log.e(TAG, "Invalid audio file: $path")
             binding.btnPlayPause.isEnabled = false
+            binding.progressBar.progress = 0
+            binding.tvProgress.text = "00:00 / 00:00"
+            release()
             return
         }
+
         resetAudio()
         prepareMediaPlayer()
     }
 
     private fun isValidAudioFile(path: String): Boolean {
         val file = File(path)
-        val exists = file.exists()
-        val isFile = file.isFile
-        val canRead = file.canRead()
-
-        Log.d(TAG, "File validation - exists: $exists, isFile: $isFile, canRead: $canRead")
-
-        return exists && isFile && canRead
+        return file.exists() && file.isFile && file.canRead()
     }
 
     private fun prepareMediaPlayer() {
         try {
-            Log.d(TAG, "Preparing MediaPlayer for path: $audioPath")
-
             mediaPlayer?.release()
+            isPrepared = false
+            binding.btnPlayPause.isEnabled = false // Disable button while preparing
 
             mediaPlayer = MediaPlayer().apply {
+                reset()
                 setDataSource(audioPath)
 
-                setOnCompletionListener { mp ->
-                    Log.d(TAG, "Audio playback completed")
+                setOnPreparedListener { mp ->
+                    isPrepared = true
+                    this@CompactAudioPlayerView.duration = mp.duration
+                    Log.d(TAG, "Prepared. Duration: $duration ms")
+                    binding.btnPlayPause.isEnabled = true
+                    this@CompactAudioPlayerView.currentPosition = 0
+                    updateProgressDisplay()
+                }
+
+                setOnCompletionListener {
                     this@CompactAudioPlayerView.isPlaying = false
                     this@CompactAudioPlayerView.currentPosition = 0
                     updatePlayPauseButton()
                     stopProgressUpdate()
                     updateProgressDisplay()
-                    // Reset to beginning for next play
-                    mp.seekTo(0)
-                    resetAudio()
                 }
 
-                setOnPreparedListener { mp ->
-                    Log.d(TAG, "MediaPlayer prepared successfully")
-                    this@CompactAudioPlayerView.duration = mp.duration
-                    Log.d(TAG, "Audio duration: $duration ms")
-                    binding.btnPlayPause.isEnabled = true
-                    // Reset position to beginning
-                    this@CompactAudioPlayerView.currentPosition = 0
-                    updateProgressDisplay()
-                }
-
-                setOnErrorListener { mp, what, extra ->
-                    Log.e(TAG, "MediaPlayer error - what: $what, extra: $extra")
+                setOnErrorListener { _, what, extra ->
+                    Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra")
                     Toast.makeText(context, "Error loading audio", Toast.LENGTH_SHORT).show()
                     binding.btnPlayPause.isEnabled = false
+                    isPrepared = false
                     true
                 }
 
                 prepareAsync()
             }
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to prepare MediaPlayer", e)
-            Toast.makeText(context, "Failed to load audio: ${e.message}", Toast.LENGTH_SHORT).show()
             binding.btnPlayPause.isEnabled = false
         }
     }
 
     private fun playAudio() {
+        if (!isPrepared) {
+            Toast.makeText(context, "Audio is still loading...", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         mediaPlayer?.let { player ->
             try {
                 if (!player.isPlaying) {
-                    Log.d(TAG, "Starting audio playback")
-
                     if (currentPosition >= duration && duration > 0) {
-                        Log.d(TAG, "Resetting audio to beginning")
                         resetAudio()
                     }
-
                     player.start()
                     isPlaying = true
                     updatePlayPauseButton()
@@ -135,18 +147,14 @@ class CompactAudioPlayerView @JvmOverloads constructor(
                 Log.e(TAG, "Error playing audio", e)
                 Toast.makeText(context, "Error playing audio", Toast.LENGTH_SHORT).show()
             }
-        } ?: run {
-            Log.e(TAG, "MediaPlayer is null, cannot play audio")
-            Toast.makeText(context, "Audio not ready", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun pauseAudio() {
-        mediaPlayer?.let { player ->
+        mediaPlayer?.let {
             try {
-                if (player.isPlaying) {
-                    Log.d(TAG, "Pausing audio playback")
-                    player.pause()
+                if (it.isPlaying) {
+                    it.pause()
                     isPlaying = false
                     updatePlayPauseButton()
                     stopProgressUpdate()
@@ -158,46 +166,24 @@ class CompactAudioPlayerView @JvmOverloads constructor(
     }
 
     private fun updatePlayPauseButton() {
-        if(isPlaying){
-            binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
-        }else {
-            binding.btnPlayPause.setImageResource(R.drawable.ic_play)
-        }
+        binding.btnPlayPause.setImageResource(
+            if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+        )
     }
 
     private fun startProgressUpdate() {
-        post(object : Runnable {
-            override fun run() {
-                if (isPlaying && mediaPlayer != null) {
-                    try {
-                        currentPosition = mediaPlayer?.currentPosition ?: 0
-                        updateProgressDisplay()
-
-                        // Check if we've reached the end
-                        if (currentPosition >= duration && duration > 0) {
-                            Log.d(TAG, "Audio reached end, stopping progress updates")
-                            stopProgressUpdate()
-                        } else {
-                            postDelayed(this, 100)
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error updating progress", e)
-                        stopProgressUpdate()
-                    }
-                }
-            }
-        })
+        removeCallbacks(progressRunnable)
+        post(progressRunnable)
     }
 
     private fun stopProgressUpdate() {
-        removeCallbacks(null)
+        removeCallbacks(progressRunnable)
     }
 
     private fun updateProgressDisplay() {
         try {
             val progress = if (duration > 0) (currentPosition * 100 / duration) else 0
             binding.progressBar.progress = progress
-
             val currentTime = formatTime(currentPosition)
             val totalTime = formatTime(duration)
             binding.tvProgress.text = "$currentTime / $totalTime"
@@ -206,31 +192,25 @@ class CompactAudioPlayerView @JvmOverloads constructor(
         }
     }
 
-    private fun formatTime(milliseconds: Int): String {
-        return try {
-            val seconds = (milliseconds / 1000).toInt()
-            val minutes = seconds / 60
-            val remainingSeconds = seconds % 60
-            String.format("%02d:%02d", minutes, remainingSeconds)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error formatting time", e)
-            "00:00"
-        }
+    private fun formatTime(ms: Int): String {
+        val sec = ms / 1000
+        val min = sec / 60
+        val remaining = sec % 60
+        return String.format("%02d:%02d", min, remaining)
     }
 
     fun resetAudio() {
-        mediaPlayer?.let { player ->
+        mediaPlayer?.let {
             try {
                 if (isPlaying) {
-                    player.pause()
+                    it.pause()
                     isPlaying = false
                     updatePlayPauseButton()
                     stopProgressUpdate()
                 }
                 currentPosition = 0
-                player.seekTo(0)
+                it.seekTo(0)
                 updateProgressDisplay()
-                Log.d(TAG, "Audio reset to beginning")
             } catch (e: Exception) {
                 Log.e(TAG, "Error resetting audio", e)
             }
@@ -239,20 +219,23 @@ class CompactAudioPlayerView @JvmOverloads constructor(
 
     fun release() {
         try {
-            Log.d(TAG, "Releasing MediaPlayer")
             stopProgressUpdate()
             mediaPlayer?.release()
             mediaPlayer = null
             isPlaying = false
+            isPrepared = false
             currentPosition = 0
         } catch (e: Exception) {
             Log.e(TAG, "Error releasing MediaPlayer", e)
         }
     }
 
-    fun pauseIfPlaying() {
-        if (isPlaying) {
-            pauseAudio()
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Preload when view comes into screen
+        if (!isPrepared && audioPath != null) {
+            prepareMediaPlayer()
         }
     }
 

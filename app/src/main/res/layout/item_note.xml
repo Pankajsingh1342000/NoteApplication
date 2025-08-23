@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="4dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:padding="4dp">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -19,49 +19,57 @@
             android:layout_height="match_parent"
             android:padding="8dp">
 
+            <!-- Title -->
             <TextView
                 android:id="@+id/et_title"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                android:textSize="24sp"
-                android:textStyle="bold"
                 android:text="Title"
-                />
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/iv_delete"
+                app:layout_constraintHorizontal_bias="0" />
+
+            <!-- Delete Icon -->
             <ImageView
                 android:id="@+id/iv_delete"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_delete"
                 app:layout_constraintTop_toTopOf="@id/et_title"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toBottomOf="@id/et_title"
-                android:src="@drawable/ic_delete"/>
+                app:layout_constraintEnd_toEndOf="parent" />
 
+            <!-- Description -->
             <TextView
                 android:id="@+id/et_description"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@id/et_title"
                 android:text="Description"
-                android:textSize="16sp"/>
-            <FrameLayout
-                android:id="@+id/audio_player_container"
+                android:textSize="16sp"
+                app:layout_constraintTop_toBottomOf="@id/et_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="4dp"/>
+
+            <com.example.noteapplicationmvvmflow.feature.audio.CompactAudioPlayerView
+                android:id="@+id/compact_audio_player"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@id/et_description"
-                android:layout_marginTop="8dp"
-                android:minHeight="0dp" />
-            <FrameLayout
-                android:id="@+id/image_preview_container"
+                android:layout_marginTop="8dp" />
+
+            <com.example.noteapplicationmvvmflow.feature.image.CompactImagePreview
+                android:id="@+id/compact_image_preview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@id/et_description"
-                android:layout_marginTop="8dp"
-                android:minHeight="0dp"/>
+                android:layout_marginTop="8dp" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-
     </androidx.cardview.widget.CardView>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

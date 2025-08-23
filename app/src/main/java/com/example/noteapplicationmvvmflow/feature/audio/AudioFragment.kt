@@ -10,10 +10,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
 import com.example.noteapplicationmvvmflow.databinding.FragmentAudioBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -53,6 +58,7 @@ class AudioFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         checkPermission()
+        handleBackPress()
     }
 
     private fun setupClickListeners(){
@@ -60,6 +66,9 @@ class AudioFragment : Fragment() {
             if (isRecording){
                 stopRecording()
             } else {
+                if (audioFilePath != null){
+                    deleteAudio()
+                }
                 checkPermission()
             }
         }
@@ -74,6 +83,7 @@ class AudioFragment : Fragment() {
         }
 
         binding.btnCancel.setOnClickListener {
+            deleteAudio()
             findNavController().popBackStack()
         }
     }
@@ -192,6 +202,30 @@ class AudioFragment : Fragment() {
             audioPath = audioFilePath!!
         )
         findNavController().navigate(action)
+    }
+
+    private fun deleteAudio() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                audioFilePath?.let { path ->
+                    val file = File(path)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
+                audioFilePath = null
+            } catch (e: Exception) {
+                Log.e("Audio Player View", "Error deleting file", e)
+            }
+        }
+    }
+
+    private fun handleBackPress() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                deleteAudio()
+            }
+        })
     }
 
 

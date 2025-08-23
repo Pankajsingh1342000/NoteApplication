@@ -4,6 +4,7 @@ import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -36,18 +37,13 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
-    // View binding
     private lateinit var binding: FragmentHomeBinding
-
-    // ViewModel
     private val noteViewModel: NoteViewModel by viewModels()
 
-    // UI components
     private lateinit var adapter: NoteAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var fab: FloatingActionButton
 
-    // Fab state
     private var isExpanded = false
 
     // Animations
@@ -58,19 +54,18 @@ class HomeFragment : Fragment() {
         AnimationUtils.loadAnimation(requireContext(), R.anim.to_bottom_fab)
     }
 
+    // Permission launcher
     private val imagePermissionRequestLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) {
-            isGranted: Boolean ->
+    ) { isGranted: Boolean ->
         if (isGranted) {
             selectImage()
-        }
-        else{
+        } else {
             Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
-            findNavController().popBackStack()
         }
     }
 
+    // Image picker launcher
     private val pickImageLauncher = registerForActivityResult(PickVisualMedia()) { uri ->
         if (uri != null) {
             Log.d("PhotoPicker", "Selected URI: $uri")
@@ -79,7 +74,6 @@ class HomeFragment : Fragment() {
             Log.d("PhotoPicker", "No media selected")
         }
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -92,7 +86,6 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         observeNotes()
         setupClickListeners()
@@ -100,11 +93,15 @@ class HomeFragment : Fragment() {
 
     private fun setupRecyclerView() {
         recyclerView = binding.rvNotes
-        recyclerView.layoutManager =
-            StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        recyclerView.setHasFixedSize(false)
+        val lm = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL).apply {
+            gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_NONE
+        }
+        recyclerView.layoutManager = lm
 
         adapter = NoteAdapter(
-            onDeleteClick = { note -> noteViewModel.delete(note) },
+            onDeleteClick = { note -> noteViewModel.delete(note)
+                            },
             onNoteClick = { note ->
                 val action = HomeFragmentDirections.actionHomeFragmentToEditFragment(
                     id = note.id,
@@ -144,9 +141,7 @@ class HomeFragment : Fragment() {
             findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToAudioFragment())
             shrinkFab()
         }
-        binding.fabImage.setOnClickListener {
-            checkImagePermission()
-        }
+        binding.fabImage.setOnClickListener { checkImagePermission() }
         binding.fabDrawing.setOnClickListener { navigateToAddFragment(ContentType.DRAWING, "") }
         binding.fabList.setOnClickListener { navigateToAddFragment(ContentType.TODO, "") }
     }
@@ -160,7 +155,6 @@ class HomeFragment : Fragment() {
             binding.fabImage,
             binding.fabDrawing
         ).forEach { it.startAnimation(toBottomFabAnim) }
-
         isExpanded = false
     }
 
@@ -173,7 +167,6 @@ class HomeFragment : Fragment() {
             binding.fabImage,
             binding.fabDrawing
         ).forEach { it.startAnimation(fromBottomFabAnim) }
-
         isExpanded = true
     }
 
@@ -209,19 +202,21 @@ class HomeFragment : Fragment() {
     }
 
     private fun checkImagePermission() {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
         when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED -> {
                 selectImage()
             }
-            shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
+            shouldShowRequestPermissionRationale(permission) -> {
                 Toast.makeText(context, "Image Permission is Required", Toast.LENGTH_SHORT).show()
-                findNavController().popBackStack()
             }
             else -> {
-                imagePermissionRequestLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                imagePermissionRequestLauncher.launch(permission)
             }
         }
     }
@@ -230,27 +225,4 @@ class HomeFragment : Fragment() {
         pickImageLauncher.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d("HomeFragment", "Fragment resumed - resetting all audio players")
-        adapter.resetAllAudioPlayers()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d("HomeFragment", "Fragment paused - pausing all audio players")
-        adapter.pauseAllAudioPlayers()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d("HomeFragment", "Fragment stopped - releasing all audio players")
-        adapter.releaseAllAudioPlayers()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        Log.d("HomeFragment", "Fragment destroyed - releasing all audio players")
-        adapter.releaseAllAudioPlayers()
-    }
 }

@@ -164,10 +164,26 @@ class EditFragment : Fragment() {
     }
 
     private fun updateNoteAndNavigateBack() {
-        val note = createUpdatedNote()
-        if (shouldUpdateNote(note)) {
-            updateNote(note)
+        val newNote = createUpdatedNote()
+
+        val oldNote = Note(
+            id = args.id,
+            title = args.title,
+            contentType = args.contentType,
+            textContent = args.textContent,
+            audioPath = args.audioPath,
+            imagePath = args.imagePath,
+            drawingData = null,
+            todoItems = null,
+            createdAt = 0L,
+            updatedAt = 0L
+        )
+
+        if (newNote != oldNote) {
+            newNote.updatedAt = System.currentTimeMillis()
+            noteViewModel.update(newNote)
         }
+
         findNavController().popBackStack()
     }
 
@@ -177,28 +193,13 @@ class EditFragment : Fragment() {
             title = binding.etTitle.text.toString().trim(),
             contentType = if (audioDeleted || imageDeleted) "text" else args.contentType,
             textContent = binding.etDescription.text.toString().trim(),
-            audioPath = if (audioDeleted) null else args.audioPath,
-            imagePath = if (imageDeleted) null else args.imagePath,
+            audioPath = if (audioDeleted) null else audioPlayerView?.getAudioPath() ?: args.audioPath,
+            imagePath = if (imageDeleted) null else imagePreviewView?.getImagePath() ?: args.imagePath,
             drawingData = null, // TODO: Add drawing data handling
             todoItems = null, // TODO: Add todo items handling
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
-    }
-
-    private fun shouldUpdateNote(note: Note): Boolean {
-        return when {
-            audioDeleted -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
-            imageDeleted -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
-            args.contentType == "text" -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
-            args.contentType == "audio" -> note.title.isNotEmpty()
-            args.contentType == "image" -> note.title.isNotEmpty()
-            else -> note.title.isNotEmpty()
-        }
-    }
-
-    private fun updateNote(note: Note) {
-        noteViewModel.update(note)
     }
 
     override fun onDestroyView() {
