@@ -7,6 +7,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -28,6 +30,19 @@ class AddFragment : Fragment() {
     private var audioDeleted = false
     private var imageDeleted = false
 
+    private val pastelColors = listOf(
+        "#AEC6CF".toColorInt(), // Soft Blue
+        "#FFB7B2".toColorInt(), // Pastel Pink
+        "#FFDAB9".toColorInt(), // Peach Puff
+        "#E6E6FA".toColorInt(), // Lavender
+        "#B5EAD7".toColorInt(), // Mint Pastel
+        "#C7CEEA".toColorInt(), // Periwinkle
+        "#FFFACD".toColorInt(), // Lemon Chiffon
+        "#FDCFE8".toColorInt(), // Soft Blush
+        "#D5AAFF".toColorInt(), // Lilac Mist
+        "#A0E7E5".toColorInt()  // Aqua Pastel
+    )
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,51 +56,63 @@ class AddFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         updateUIForContentType()
         handleBackPress()
+        val randomColor = pastelColors.random()
+        binding.root.setBackgroundColor(randomColor)
     }
 
     private fun updateUIForContentType() {
+        val params = binding.layoutTitle.layoutParams as ConstraintLayout.LayoutParams
         when (args.contentType) {
             "text" -> {
-                binding.etDescription.hint = "Enter your note content here..."
+                params.topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                params.topToBottom = ConstraintLayout.LayoutParams.UNSET
+                binding.layoutTitle.layoutParams = params
+
                 binding.etDescription.isEnabled = true
-                binding.etDescription.minLines = 3
-                binding.etDescription.maxLines = 10
+                binding.etDescription.minLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 binding.audioPlayerContainer.visibility = View.GONE
             }
             "audio" -> {
-                binding.etDescription.hint = "Enter Description"
+
+                binding.audioPlayerContainer.visibility= View.VISIBLE
+                params.topToTop = ConstraintLayout.LayoutParams.UNSET
+                params.topToBottom = binding.audioPlayerContainer.id
+                binding.layoutTitle.layoutParams = params
+
+                binding.audioPlayerContainer.visibility = View.VISIBLE
+                val params = binding.layoutTitle.layoutParams as ConstraintLayout.LayoutParams
+                params.topToBottom = binding.audioPlayerContainer.id
+                binding.layoutTitle.layoutParams = params
                 binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
 
                 // Setup audio player
                 setupAudioPlayer()
             }
             "image" -> {
-                binding.etDescription.hint = "Enter Description"
+                binding.imagePreviewContainer.visibility = View.VISIBLE
+                val params = binding.layoutTitle.layoutParams as ConstraintLayout.LayoutParams
+                params.topToBottom = binding.imagePreviewContainer.id
+                binding.layoutTitle.layoutParams = params
+
                 binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 binding.audioPlayerContainer.visibility = View.GONE
 
                 setupImagePreview()
             }
             "drawing" -> {
-                binding.etDescription.hint = "Drawing canvas will be added here"
                 binding.etDescription.isEnabled = false
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 binding.audioPlayerContainer.visibility = View.GONE
             }
             "todo" -> {
-                binding.etDescription.hint = "Todo list will be added here"
                 binding.etDescription.isEnabled = false
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 binding.audioPlayerContainer.visibility = View.GONE
             }
@@ -103,7 +130,6 @@ class AddFragment : Fragment() {
         // Create new audio player
         audioPlayerView = AudioPlayerView(requireContext())
         binding.audioPlayerContainer.addView(audioPlayerView)
-        binding.audioPlayerContainer.visibility = View.VISIBLE
 
         audioPlayerView?.onAudioDeleted = {
             onAudioDeleted()
@@ -128,7 +154,6 @@ class AddFragment : Fragment() {
         binding.imagePreviewContainer.removeAllViews()
         imagePreviewView = ImagePreview(requireContext())
         binding.imagePreviewContainer.addView(imagePreviewView)
-        binding.imagePreviewContainer.visibility = View.VISIBLE
 
         imagePreviewView?.onImageDeleted = {
             onImageDeleted()
@@ -171,6 +196,7 @@ class AddFragment : Fragment() {
     }
 
     private fun saveNoteAndNavigateBack() {
+        findNavController().popBackStack()
         val note = createNoteFromInput()
         if (shouldSaveNote(note)) {
             saveNote(note)
@@ -178,7 +204,6 @@ class AddFragment : Fragment() {
             audioPlayerView?.deleteAudio()
             imagePreviewView?.deleteImage()
         }
-        findNavController().popBackStack()
     }
 
     private fun createNoteFromInput(): Note {

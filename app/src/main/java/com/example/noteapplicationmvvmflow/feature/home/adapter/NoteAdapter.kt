@@ -8,13 +8,26 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.noteapplicationmvvmflow.data.db.Note
 import com.example.noteapplicationmvvmflow.databinding.ItemNoteBinding
 import kotlin.collections.mutableListOf
+import androidx.core.graphics.toColorInt
 
 class NoteAdapter(
     private val onDeleteClick: (Note) -> Unit,
-    private val onNoteClick: (Note) -> Unit
+    private val onNoteClick: (Note, bgColor: Int) -> Unit,
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     private val notes = mutableListOf<Note>()
+    private val pastelColors = listOf(
+        "#AEC6CF".toColorInt(), // Soft Blue
+        "#FFB7B2".toColorInt(), // Pastel Pink
+        "#FFDAB9".toColorInt(), // Peach Puff
+        "#E6E6FA".toColorInt(), // Lavender
+        "#B5EAD7".toColorInt(), // Mint Pastel
+        "#C7CEEA".toColorInt(), // Periwinkle
+        "#FFFACD".toColorInt(), // Lemon Chiffon
+        "#FDCFE8".toColorInt(), // Soft Blush
+        "#D5AAFF".toColorInt(), // Lilac Mist
+        "#A0E7E5".toColorInt()  // Aqua Pastel
+    )
 
     init {
         setHasStableIds(true)
@@ -28,6 +41,9 @@ class NoteAdapter(
 
             binding.compactAudioPlayer.visibility = View.GONE
             binding.compactImagePreview.visibility = View.GONE
+
+            val randomColor = pastelColors[adapterPosition % pastelColors.size]
+            binding.layoutCard.setCardBackgroundColor(randomColor)
 
             when (note.contentType) {
                 "image" -> {
@@ -48,7 +64,7 @@ class NoteAdapter(
             }
 
             binding.ivDelete.setOnClickListener { onDeleteClick(note) }
-            binding.root.setOnClickListener { onNoteClick(note) }
+            binding.root.setOnClickListener { onNoteClick(note, randomColor) }
         }
     }
 

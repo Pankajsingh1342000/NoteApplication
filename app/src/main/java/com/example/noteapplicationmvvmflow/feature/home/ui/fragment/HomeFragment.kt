@@ -72,6 +72,7 @@ class HomeFragment : Fragment() {
             navigateToAddFragment(ContentType.IMAGE, uri.toString())
         } else {
             Log.d("PhotoPicker", "No media selected")
+            shrinkFab()
         }
     }
 
@@ -102,14 +103,15 @@ class HomeFragment : Fragment() {
         adapter = NoteAdapter(
             onDeleteClick = { note -> noteViewModel.delete(note)
                             },
-            onNoteClick = { note ->
+            onNoteClick = { note, bgColor ->
                 val action = HomeFragmentDirections.actionHomeFragmentToEditFragment(
                     id = note.id,
                     title = note.title,
                     textContent = note.textContent ?: "",
                     contentType = note.contentType ?: "text",
                     audioPath = note.audioPath ?: "",
-                    imagePath = note.imagePath ?: ""
+                    imagePath = note.imagePath ?: "",
+                    bgColor = bgColor
                 )
                 findNavController().navigate(action)
             }

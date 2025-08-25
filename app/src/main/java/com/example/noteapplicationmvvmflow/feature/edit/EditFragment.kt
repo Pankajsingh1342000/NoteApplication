@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -44,33 +45,43 @@ class EditFragment : Fragment() {
     private fun populateFields() {
         binding.etTitle.setText(args.title)
         binding.etDescription.setText(args.textContent)
+        binding.root.setBackgroundColor(args.bgColor)
     }
 
     private fun updateUIForContentType() {
+        val params = binding.layoutTitle.layoutParams as ConstraintLayout.LayoutParams
         when (args.contentType) {
             "text" -> {
-                binding.etDescription.hint = "Enter your note content here..."
+                params.topToTop = ConstraintLayout.LayoutParams.PARENT_ID
+                params.topToBottom = ConstraintLayout.LayoutParams.UNSET
+                binding.layoutTitle.layoutParams = params
+
                 binding.etDescription.isEnabled = true
-                binding.etDescription.minLines = 3
-                binding.etDescription.maxLines = 10
+                binding.etDescription.minLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
             }
             "audio" -> {
-                binding.etDescription.hint = "Description"
+                binding.audioPlayerContainer.visibility = View.VISIBLE
+                params.topToTop = ConstraintLayout.LayoutParams.UNSET
+                params.topToBottom = binding.audioPlayerContainer.id
+                binding.layoutTitle.layoutParams = params
+
                 binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 imagePreviewView?.visibility = View.GONE
 
                 setupAudioPlayer()
             }
             "image" -> {
-                binding.etDescription.hint = "Description"
+                binding.imagePreviewContainer.visibility = View.VISIBLE
+                val params = binding.layoutTitle.layoutParams as ConstraintLayout.LayoutParams
+                params.topToBottom = binding.imagePreviewContainer.id
+                binding.layoutTitle.layoutParams = params
+
                 binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
 
@@ -78,25 +89,20 @@ class EditFragment : Fragment() {
 
             }
             "drawing" -> {
-                binding.etDescription.hint = "Drawing will be displayed here..."
                 binding.etDescription.isEnabled = false
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
 
             }
             "todo" -> {
-                binding.etDescription.hint = "Todo list will be displayed here..."
                 binding.etDescription.isEnabled = false
                 binding.etDescription.minLines = 1
-                binding.etDescription.maxLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
 
             }
             else -> {
-                binding.etDescription.hint = "Enter your note content here..."
                 binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 3
                 binding.etDescription.maxLines = 10
@@ -111,7 +117,6 @@ class EditFragment : Fragment() {
 
         audioPlayerView = AudioPlayerView(requireContext())
         binding.audioPlayerContainer.addView(audioPlayerView)
-        binding.audioPlayerContainer.visibility = View.VISIBLE
 
         audioPlayerView?.onAudioDeleted = {
             onAudioDeleted()
@@ -126,7 +131,6 @@ class EditFragment : Fragment() {
         binding.imagePreviewContainer.removeAllViews()
         imagePreviewView = ImagePreview(requireContext())
         binding.imagePreviewContainer.addView(imagePreviewView)
-        binding.imagePreviewContainer.visibility = View.VISIBLE
 
         imagePreviewView?.onImageDeleted = {
             onImageDeleted()
