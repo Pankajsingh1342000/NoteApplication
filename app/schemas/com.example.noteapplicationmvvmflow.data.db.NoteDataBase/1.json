@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "085a808bcf5af45576285223519d1b99",
+    "identityHash": "33d35e63f147fa747a54494055d7b785",
     "entities": [
       {
         "tableName": "note_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `contentType` TEXT, `textContent` TEXT, `audioPath` TEXT, `imagePath` TEXT, `drawingData` TEXT, `todoItems` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `contentType` TEXT, `textContent` TEXT, `audioPath` TEXT, `imagePath` TEXT, `drawingPath` TEXT, `todoItems` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -41,8 +41,8 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "drawingData",
-            "columnName": "drawingData",
+            "fieldPath": "drawingPath",
+            "columnName": "drawingPath",
             "affinity": "TEXT"
           },
           {
@@ -73,7 +73,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '085a808bcf5af45576285223519d1b99')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '33d35e63f147fa747a54494055d7b785')"
     ]
   }
 }

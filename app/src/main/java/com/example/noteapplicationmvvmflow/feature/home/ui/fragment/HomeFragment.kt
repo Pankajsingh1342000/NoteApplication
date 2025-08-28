@@ -111,6 +111,7 @@ class HomeFragment : Fragment() {
                     contentType = note.contentType ?: "text",
                     audioPath = note.audioPath ?: "",
                     imagePath = note.imagePath ?: "",
+                    drawingPath = note.drawingPath ?: "",
                     bgColor = bgColor
                 )
                 findNavController().navigate(action)
@@ -144,7 +145,10 @@ class HomeFragment : Fragment() {
             shrinkFab()
         }
         binding.fabImage.setOnClickListener { checkImagePermission() }
-        binding.fabDrawing.setOnClickListener { navigateToAddFragment(ContentType.DRAWING, "") }
+        binding.fabDrawing.setOnClickListener {
+            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToDrawingFragment())
+            shrinkFab()
+        }
         binding.fabList.setOnClickListener { navigateToAddFragment(ContentType.TODO, "") }
     }
 

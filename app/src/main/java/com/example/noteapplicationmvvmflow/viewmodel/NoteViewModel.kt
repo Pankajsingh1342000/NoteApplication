@@ -34,8 +34,10 @@ class NoteViewModel @Inject constructor(
     }
 
     fun delete(note: Note) = viewModelScope.launch {
-        if (note.contentType == "audio"){
-            deleteAudio(note.audioPath)
+
+        when(note.contentType) {
+            "audio" -> deleteFile(note.audioPath)
+            "drawing" -> deleteFile(note.drawingPath)
         }
         repository.delete(note)
     }
@@ -44,10 +46,10 @@ class NoteViewModel @Inject constructor(
         repository.update(note)
     }
 
-    private suspend fun deleteAudio(audioPath: String?) {
+    private suspend fun deleteFile(filePath: String?) {
         withContext(Dispatchers.IO) {
             try {
-                audioPath?.let { path ->
+                filePath?.let { path ->
                     val file = File(path)
                     if (file.exists()) {
                         file.delete()

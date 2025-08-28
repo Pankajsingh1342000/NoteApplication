@@ -102,13 +102,20 @@ class AddFragment : Fragment() {
                 binding.etDescription.visibility = View.VISIBLE
                 binding.audioPlayerContainer.visibility = View.GONE
 
-                setupImagePreview()
+                setupImagePreview(args.imagePath)
             }
             "drawing" -> {
-                binding.etDescription.isEnabled = false
+                binding.imagePreviewContainer.visibility = View.VISIBLE
+                val params = binding.layoutTitle.layoutParams as ConstraintLayout.LayoutParams
+                params.topToBottom = binding.imagePreviewContainer.id
+                binding.layoutTitle.layoutParams = params
+
+                binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 binding.audioPlayerContainer.visibility = View.GONE
+
+                setupImagePreview(args.drawingPath)
             }
             "todo" -> {
                 binding.etDescription.isEnabled = false
@@ -150,7 +157,7 @@ class AddFragment : Fragment() {
         }
     }
 
-    private fun setupImagePreview() {
+    private fun setupImagePreview(path: String?) {
         binding.imagePreviewContainer.removeAllViews()
         imagePreviewView = ImagePreview(requireContext())
         binding.imagePreviewContainer.addView(imagePreviewView)
@@ -159,16 +166,10 @@ class AddFragment : Fragment() {
             onImageDeleted()
         }
 
-        if (args.imagePath.isNotEmpty()) {
-            imagePreviewView?.setImage(args.imagePath)
-        } else {
-            val imagePath = arguments?.getString("imagePath")
-            if (!imagePath.isNullOrEmpty()) {
-                imagePreviewView?.setImage(imagePath)
-            } else {
-                Log.e("AddFragment", "No Image path found!")
-            }
+        if (path!=null) {
+            imagePreviewView?.setImage(path)
         }
+
     }
 
     private fun onAudioDeleted() {
@@ -183,8 +184,7 @@ class AddFragment : Fragment() {
         imageDeleted = true
         binding.imagePreviewContainer.visibility = View.GONE
         binding.etDescription.isEnabled = true
-        binding.etDescription.minLines = 3
-        binding.etDescription.maxLines = 10
+        binding.etDescription.minLines = 1
     }
 
     private fun handleBackPress() {
@@ -226,7 +226,10 @@ class AddFragment : Fragment() {
                 val imagePath = if (args.imagePath.isNotEmpty()) args.imagePath else arguments?.getString("imagePath") ?: ""
                 NoteHelper.createImageNote(title, imagePath, content)
             }
-            args.contentType == "drawing" -> NoteHelper.createDrawingNote(title, "")
+            args.contentType == "drawing" -> {
+                val drawingPath = if (args.drawingPath.isNotEmpty()) args.drawingPath else arguments?.getString("drawingPath") ?: ""
+                NoteHelper.createDrawingNote(title, drawingPath, content)
+            }
             args.contentType == "todo" -> NoteHelper.createTodoNote(title, "")
             else -> NoteHelper.createTextNote(title, content)
         }
@@ -239,6 +242,7 @@ class AddFragment : Fragment() {
             args.contentType == "text" -> note.title.isNotEmpty() || (note.textContent?.isNotEmpty() == true)
             args.contentType == "audio" -> note.title.isNotEmpty()
             args.contentType == "image" -> note.title.isNotEmpty()
+            args.contentType == "drawing" -> note.title.isNotEmpty()
             else -> note.title.isNotEmpty()
         }
     }

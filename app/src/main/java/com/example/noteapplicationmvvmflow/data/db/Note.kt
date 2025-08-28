@@ -12,7 +12,7 @@ data class Note(
     val textContent: String?,
     val audioPath: String?,
     val imagePath: String?,
-    val drawingData: String?,
+    val drawingPath: String?,
     val todoItems: String?,
     val createdAt: Long = System.currentTimeMillis(),
     var updatedAt: Long = System.currentTimeMillis()

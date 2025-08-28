@@ -46,6 +46,8 @@ class NoteAdapter(
             binding.layoutCard.setCardBackgroundColor(randomColor)
 
             when (note.contentType) {
+                "text" -> binding.etDescription.text = note.textContent ?: "No content"
+
                 "image" -> {
                     binding.etDescription.text =
                         note.textContent.takeUnless { it.isNullOrEmpty() } ?: "🖼️ Image Note"
@@ -58,8 +60,12 @@ class NoteAdapter(
                     binding.compactAudioPlayer.visibility = View.VISIBLE
                     note.audioPath?.let { binding.compactAudioPlayer.setAudioPath(it) }
                 }
-                "text" -> binding.etDescription.text = note.textContent ?: "No content"
-                "drawing" -> binding.etDescription.text = "✏️ Drawing Note"
+                "drawing" -> {
+                    binding.etDescription.text =
+                        note.textContent.takeUnless { it.isNullOrEmpty() } ?: "✏️ Drawing Note"
+                    binding.compactImagePreview.visibility = View.VISIBLE
+                    note.drawingPath?.let { binding.compactImagePreview.setImage(it) }
+                }
                 "todo" -> binding.etDescription.text = "✅ Todo List"
             }
 

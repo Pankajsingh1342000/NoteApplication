@@ -85,14 +85,21 @@ class EditFragment : Fragment() {
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
 
-                setupImagePreview()
+                setupImagePreview(args.imagePath)
 
             }
             "drawing" -> {
-                binding.etDescription.isEnabled = false
+                binding.imagePreviewContainer.visibility = View.VISIBLE
+                val params = binding.layoutTitle.layoutParams as ConstraintLayout.LayoutParams
+                params.topToBottom = binding.imagePreviewContainer.id
+                binding.layoutTitle.layoutParams = params
+
+                binding.etDescription.isEnabled = true
                 binding.etDescription.minLines = 1
                 binding.etDescription.visibility = View.VISIBLE
                 audioPlayerView?.visibility = View.GONE
+
+                setupImagePreview(args.drawingPath)
 
             }
             "todo" -> {
@@ -127,7 +134,7 @@ class EditFragment : Fragment() {
         }
     }
 
-    private fun setupImagePreview() {
+    private fun setupImagePreview(path: String?) {
         binding.imagePreviewContainer.removeAllViews()
         imagePreviewView = ImagePreview(requireContext())
         binding.imagePreviewContainer.addView(imagePreviewView)
@@ -136,8 +143,8 @@ class EditFragment : Fragment() {
             onImageDeleted()
         }
 
-        if (args.imagePath.isNotEmpty()) {
-            imagePreviewView?.setImage(args.imagePath)
+        if (path!=null) {
+            imagePreviewView?.setImage(path)
         }
     }
 
@@ -155,8 +162,7 @@ class EditFragment : Fragment() {
 
         binding.imagePreviewContainer.visibility = View.GONE
         binding.etDescription.isEnabled = true
-        binding.etDescription.minLines = 3
-        binding.etDescription.maxLines = 10
+        binding.etDescription.minLines = 1
     }
 
     private fun handleBackPress() {
@@ -177,7 +183,7 @@ class EditFragment : Fragment() {
             textContent = args.textContent,
             audioPath = args.audioPath,
             imagePath = args.imagePath,
-            drawingData = null,
+            drawingPath = args.drawingPath,
             todoItems = null,
             createdAt = 0L,
             updatedAt = 0L
@@ -199,7 +205,7 @@ class EditFragment : Fragment() {
             textContent = binding.etDescription.text.toString().trim(),
             audioPath = if (audioDeleted) null else audioPlayerView?.getAudioPath() ?: args.audioPath,
             imagePath = if (imageDeleted) null else imagePreviewView?.getImagePath() ?: args.imagePath,
-            drawingData = null, // TODO: Add drawing data handling
+            drawingPath = if (imageDeleted) null else imagePreviewView?.getImagePath() ?: args.drawingPath,
             todoItems = null, // TODO: Add todo items handling
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()

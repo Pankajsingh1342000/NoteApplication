@@ -12,7 +12,7 @@ object NoteHelper {
             textContent = textContent,
             audioPath = null,
             imagePath = null,
-            drawingData = null,
+            drawingPath = null,
             todoItems = null,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
@@ -26,7 +26,7 @@ object NoteHelper {
             textContent = textContent,
             audioPath = audioPath,
             imagePath = null,
-            drawingData = null,
+            drawingPath = null,
             todoItems = null,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
@@ -40,21 +40,21 @@ object NoteHelper {
             textContent = textContent,
             audioPath = null,
             imagePath = imagePath,
-            drawingData = null,
+            drawingPath = null,
             todoItems = null,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
     }
 
-    fun createDrawingNote(title: String, drawingData: String,textContent: String? = null): Note {
+    fun createDrawingNote(title: String, drawingPath: String,textContent: String? = null): Note {
         return Note(
             title = title,
             contentType = ContentType.DRAWING.value,
-            textContent = null,
+            textContent = textContent,
             audioPath = null,
             imagePath = null,
-            drawingData = drawingData,
+            drawingPath = drawingPath,
             todoItems = null,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
@@ -68,7 +68,7 @@ object NoteHelper {
             textContent = null,
             audioPath = null,
             imagePath = null,
-            drawingData = null,
+            drawingPath = null,
             todoItems = todoItems,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
