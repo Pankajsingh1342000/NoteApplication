@@ -30,14 +30,16 @@ class DrawingView @JvmOverloads constructor(
         strokeJoin = Paint.Join.ROUND
     }
 
-    private val drawingPaths = mutableListOf<DrawingPath>()
-    private val undoPaths = mutableListOf<DrawingPath>()
-
+    // Remove local path storage - now managed by ViewModel
+    private var drawingPaths = listOf<DrawingPath>()
     private var canvasBitmap: Bitmap? = null
     private var drawCanvas: Canvas? = null
     private var currentBrushStyle = BrushStyle.PENCIL
     private var currentColor = Color.BLACK
+
+    // Callbacks to communicate with Fragment/ViewModel
     private var onDrawListener: (() -> Unit)? = null
+    private var onPathCompleted: ((DrawingPath) -> Unit)? = null
 
     init {
         setupPaint()
@@ -53,6 +55,9 @@ class DrawingView @JvmOverloads constructor(
         canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         drawCanvas = Canvas(canvasBitmap!!)
         drawCanvas?.drawColor(Color.WHITE)
+
+        // Redraw existing paths after size change
+        redrawAllPaths()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -79,12 +84,17 @@ class DrawingView @JvmOverloads constructor(
             }
 
             MotionEvent.ACTION_UP -> {
+                // Draw the path to canvas
                 drawCanvas?.drawPath(currentPath, currentPaint)
-                drawingPaths.add(DrawingPath(Path(currentPath), Paint(currentPaint)))
-                undoPaths.clear()
+
+                // Notify ViewModel about completed path
+                val completedPath = DrawingPath(Path(currentPath), Paint(currentPaint))
+                onPathCompleted?.invoke(completedPath)
+
+                // Reset current path
                 currentPath.reset()
 
-                Log.d("DrawingView", "Drawing added. Total paths: ${drawingPaths.size}")
+                Log.d("DrawingView", "Path completed and sent to ViewModel")
                 onDrawListener?.invoke()
             }
         }
@@ -93,49 +103,18 @@ class DrawingView @JvmOverloads constructor(
         return true
     }
 
-    fun undo(): Boolean {
-        return if (drawingPaths.isNotEmpty()) {
-            val lastPath = drawingPaths.removeAt(drawingPaths.size - 1)
-            undoPaths.add(lastPath)
-            redrawCanvas()
-            invalidate()
-            Log.d("DrawingView", "Undo: Paths=${drawingPaths.size}, Undo stack=${undoPaths.size}")
-            true
-        } else {
-            false
-        }
+    // Update paths from ViewModel
+    fun updatePaths(paths: List<DrawingPath>) {
+        drawingPaths = paths
+        redrawAllPaths()
+        invalidate()
     }
 
-    fun redo(): Boolean {
-        return if (undoPaths.isNotEmpty()) {
-            val pathToRedo = undoPaths.removeAt(undoPaths.size - 1)
-            drawingPaths.add(pathToRedo)
-            redrawCanvas()
-            invalidate()
-            Log.d("DrawingView", "Redo: Paths=${drawingPaths.size}, Undo stack=${undoPaths.size}")
-            true
-        } else {
-            false
-        }
-    }
-
-    private fun redrawCanvas() {
+    private fun redrawAllPaths() {
         drawCanvas?.drawColor(Color.WHITE)
         for (drawingPath in drawingPaths) {
             drawCanvas?.drawPath(drawingPath.path, drawingPath.copyPaint())
         }
-    }
-
-    fun canUndo(): Boolean = drawingPaths.isNotEmpty()
-    fun canRedo(): Boolean = undoPaths.isNotEmpty()
-
-    fun clearDrawing() {
-        drawingPaths.clear()
-        undoPaths.clear()
-        currentPath.reset()
-        drawCanvas?.drawColor(Color.WHITE)
-        invalidate()
-        Log.d("DrawingView", "Drawing cleared")
     }
 
     fun setBrushColor(color: Int) {
@@ -155,6 +134,10 @@ class DrawingView @JvmOverloads constructor(
 
     fun setOnDrawListener(listener: () -> Unit) {
         onDrawListener = listener
+    }
+
+    fun setOnPathCompletedListener(listener: (DrawingPath) -> Unit) {
+        onPathCompleted = listener
     }
 
     fun getCurrentColor(): Int = currentColor

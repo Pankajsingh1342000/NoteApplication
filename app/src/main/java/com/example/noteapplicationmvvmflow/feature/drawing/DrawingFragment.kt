@@ -12,25 +12,34 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.noteapplicationmvvmflow.data.model.drawing.BrushStyle
 import com.example.noteapplicationmvvmflow.databinding.FragmentDrawingBinding
 import androidx.core.graphics.toColorInt
 import androidx.navigation.fragment.findNavController
 import com.example.noteapplicationmvvmflow.R
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class DrawingFragment : Fragment() {
 
     private var _binding: FragmentDrawingBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var drawingView: DrawingView
-    private var currentColor = Color.BLACK
     private var drawingFilePath: String? = null
+
+    // ViewModel
+    private val drawingViewModel: DrawingViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,30 +56,71 @@ class DrawingFragment : Fragment() {
         setupDrawingView()
         setupButtons()
         handleBackPress()
-
-        // Initialize button states
-        updateUndoRedoButtons()
-        setDrawingColor(drawingView.getCurrentColor())
-        updateBrushIcon(drawingView.getCurrentBrushStyle())
+        observeViewModel()
     }
 
     private fun setupDrawingView() {
+        // Set up listeners
         drawingView.setOnDrawListener {
-            updateUndoRedoButtons()
+            // Optional: any immediate UI updates
+        }
+
+        // Listen for completed paths to send to ViewModel
+        drawingView.setOnPathCompletedListener { drawingPath ->
+            drawingViewModel.addDrawingPath(drawingPath)
+        }
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Observe drawing paths
+                launch {
+                    drawingViewModel.drawingPaths.collect { paths ->
+                        drawingView.updatePaths(paths)
+                    }
+                }
+
+                // Observe undo/redo state
+                launch {
+                    drawingViewModel.canUndo.collect { canUndo ->
+                        binding.btnUndo.isEnabled = canUndo
+                        binding.btnUndo.alpha = if (canUndo) 1.0f else 0.5f
+                    }
+                }
+
+                launch {
+                    drawingViewModel.canRedo.collect { canRedo ->
+                        binding.btnRedo.isEnabled = canRedo
+                        binding.btnRedo.alpha = if (canRedo) 1.0f else 0.5f
+                    }
+                }
+
+                // Observe current color
+                launch {
+                    drawingViewModel.currentColor.collect { color ->
+                        setDrawingColor(color)
+                    }
+                }
+
+                // Observe current brush style
+                launch {
+                    drawingViewModel.currentBrushStyle.collect { brushStyle ->
+                        updateBrushIcon(brushStyle)
+                        drawingView.setBrushStyle(brushStyle)
+                    }
+                }
+            }
         }
     }
 
     private fun setupButtons() {
         binding.btnUndo.setOnClickListener {
-            if (drawingView.undo()) {
-                updateUndoRedoButtons()
-            }
+            drawingViewModel.undo()
         }
 
         binding.btnRedo.setOnClickListener {
-            if (drawingView.redo()) {
-                updateUndoRedoButtons()
-            }
+            drawingViewModel.redo()
         }
 
         binding.btnBrushColor.setOnClickListener {
@@ -90,19 +140,6 @@ class DrawingFragment : Fragment() {
         }
     }
 
-    private fun updateUndoRedoButtons() {
-        val canUndo = drawingView.canUndo()
-        val canRedo = drawingView.canRedo()
-
-        binding.btnUndo.isEnabled = canUndo
-        binding.btnUndo.alpha = if (canUndo) 1.0f else 0.5f
-
-        binding.btnRedo.isEnabled = canRedo
-        binding.btnRedo.alpha = if (canRedo) 1.0f else 0.5f
-
-        Log.d("DrawingFragment", "Undo: $canUndo, Redo: $canRedo")
-    }
-
     private fun showColorPicker() {
         val colors = arrayOf(
             Color.BLACK, Color.RED, Color.GREEN, Color.BLUE,
@@ -120,7 +157,7 @@ class DrawingFragment : Fragment() {
         AlertDialog.Builder(requireContext())
             .setTitle("Choose Color")
             .setItems(colorNames) { _, which ->
-                setDrawingColor(colors[which])
+                drawingViewModel.setColor(colors[which])
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -129,38 +166,32 @@ class DrawingFragment : Fragment() {
     private fun showBrushStyleDialog() {
         val styles = BrushStyle.entries.toTypedArray()
         val styleNames = styles.map { getBrushStyleDisplayName(it) }.toTypedArray()
-
-        // Get current brush style to show which one is selected
-        val currentStyle = drawingView.getCurrentBrushStyle()
+        val currentStyle = drawingViewModel.currentBrushStyle.value
         val currentIndex = styles.indexOf(currentStyle)
 
         AlertDialog.Builder(requireContext())
             .setTitle("Choose Brush Style")
             .setSingleChoiceItems(styleNames, currentIndex) { dialog, which ->
                 val selectedStyle = styles[which]
-                drawingView.setBrushStyle(selectedStyle)
-                updateBrushIcon(selectedStyle)
+                drawingViewModel.setBrushStyle(selectedStyle)
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-
     private fun showClearConfirmation() {
         AlertDialog.Builder(requireContext())
             .setTitle("Clear Drawing")
             .setMessage("Are you sure you want to clear the entire drawing?")
             .setPositiveButton("Clear") { _, _ ->
-                drawingView.clearDrawing()
-                updateUndoRedoButtons()
+                drawingViewModel.clearDrawing()
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
     private fun setDrawingColor(color: Int) {
-        currentColor = color
         drawingView.setBrushColor(color)
 
         // Update color button background to show current color
@@ -179,7 +210,6 @@ class DrawingFragment : Fragment() {
             BrushStyle.MARKER -> R.drawable.ic_marker
             BrushStyle.CALLIGRAPHY -> R.drawable.ic_calligraphy
         }
-
         binding.btnBrushStyle.setImageResource(iconRes)
     }
 
@@ -193,11 +223,16 @@ class DrawingFragment : Fragment() {
     }
 
     private fun saveDrawing() {
+        if (!drawingViewModel.hasContent()) {
+            Toast.makeText(context, "Nothing to save", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val bitmap = drawingView.exportDrawing()
         if (bitmap != null) {
             saveDrawingToFile(bitmap)
         } else {
-            Toast.makeText(context, "Nothing to save", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Failed to export drawing", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -206,7 +241,6 @@ class DrawingFragment : Fragment() {
             val file = createDrawingFile()
             drawingFilePath = file.absolutePath
 
-            // Ensure parent directory exists
             file.parentFile?.mkdirs()
             val fileOutputStream = FileOutputStream(file)
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
