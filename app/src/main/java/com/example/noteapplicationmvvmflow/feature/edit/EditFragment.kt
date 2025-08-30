@@ -153,8 +153,7 @@ class EditFragment : Fragment() {
 
         binding.audioPlayerContainer.visibility = View.GONE
         binding.etDescription.isEnabled = true
-        binding.etDescription.minLines = 3
-        binding.etDescription.maxLines = 10
+        binding.etDescription.minLines = 1
     }
 
     private fun onImageDeleted() {

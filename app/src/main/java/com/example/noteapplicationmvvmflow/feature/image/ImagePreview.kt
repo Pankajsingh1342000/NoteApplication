@@ -13,6 +13,10 @@ import coil.size.Precision
 import coil.size.Scale
 import com.example.noteapplicationmvvmflow.R
 import com.example.noteapplicationmvvmflow.databinding.ViewImagePreviewBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.File
 
 class ImagePreview@JvmOverloads constructor(
     context: Context,
@@ -54,12 +58,25 @@ class ImagePreview@JvmOverloads constructor(
     fun deleteImage() {
         try {
             currentDisposable?.dispose()
-            
-            imagePath = null
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    imagePath?.let { path ->
+                        val file = File(path)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("Image Player View", "Error deleting file", e)
+                }
+            }
+//            imagePath = null
+
             onImageDeleted?.invoke()
 
         } catch (e: Exception) {
-            Log.e("AudioPlayerView", "Error deleting audio", e)
+            Log.e("ImagePlayerView", "Error deleting audio", e)
         }
     }
 
