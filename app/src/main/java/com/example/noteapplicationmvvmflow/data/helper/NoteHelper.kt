@@ -2,6 +2,8 @@ package com.example.noteapplicationmvvmflow.data.helper
 
 import com.example.noteapplicationmvvmflow.data.db.Note
 import com.example.noteapplicationmvvmflow.data.model.ContentType
+import com.example.noteapplicationmvvmflow.data.model.todo.TodoItem
+import com.example.noteapplicationmvvmflow.feature.todo.util.TodoItemConverter
 
 object NoteHelper {
 
@@ -61,7 +63,7 @@ object NoteHelper {
         )
     }
 
-    fun createTodoNote(title: String, todoItems: String,textContent: String? = null): Note {
+    fun createTodoNote(title: String, todoItems: List<TodoItem>): Note {
         return Note(
             title = title,
             contentType = ContentType.TODO.value,
@@ -69,9 +71,13 @@ object NoteHelper {
             audioPath = null,
             imagePath = null,
             drawingPath = null,
-            todoItems = todoItems,
+            todoItems = TodoItemConverter.toJson(todoItems),
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
+    }
+
+    fun getTodoItemsFromNote(note: Note): List<TodoItem> {
+        return TodoItemConverter.fromJson(note.todoItems)
     }
 }

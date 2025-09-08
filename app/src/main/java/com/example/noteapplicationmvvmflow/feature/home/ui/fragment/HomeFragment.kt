@@ -170,9 +170,15 @@ class HomeFragment : Fragment() {
                     audioPath = note.audioPath ?: "",
                     imagePath = note.imagePath ?: "",
                     drawingPath = note.drawingPath ?: "",
+                    todoItems = note.todoItems ?: "",
                     bgColor = bgColor
                 )
-                findNavController().navigate(action)
+                try {
+                    findNavController().navigate(action)
+                } catch (e: Exception) {
+                    Log.e("HomeFragment", "Navigation failed", e)
+                }
+//                findNavController().navigate(action)
             }
         )
         recyclerView.adapter = adapter

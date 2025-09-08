@@ -59,6 +59,7 @@
         <argument android:name="audioPath" app:argType="string" android:defaultValue=""/>
         <argument android:name="imagePath" app:argType="string" android:defaultValue=""/>
         <argument android:name="drawingPath" app:argType="string" android:defaultValue=""/>
+        <argument android:name="todoItems" app:argType="string" app:nullable="true" />
         <argument android:name="bgColor" app:argType="integer" android:defaultValue="0"/>
 
     </fragment>

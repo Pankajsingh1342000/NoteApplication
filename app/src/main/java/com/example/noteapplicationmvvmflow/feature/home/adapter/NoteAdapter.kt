@@ -9,6 +9,8 @@ import com.example.noteapplicationmvvmflow.data.db.Note
 import com.example.noteapplicationmvvmflow.databinding.ItemNoteBinding
 import kotlin.collections.mutableListOf
 import androidx.core.graphics.toColorInt
+import com.example.noteapplicationmvvmflow.data.helper.NoteHelper
+import com.example.noteapplicationmvvmflow.feature.todo.ui.TodoPreviewView
 
 class NoteAdapter(
     private val onDeleteClick: (Note) -> Unit,
@@ -26,7 +28,7 @@ class NoteAdapter(
         "#FFFACD".toColorInt(), // Lemon Chiffon
         "#FDCFE8".toColorInt(), // Soft Blush
         "#D5AAFF".toColorInt(), // Lilac Mist
-        "#A0E7E5".toColorInt()  // Aqua Pastel
+        "#A0E7E5".toColorInt() // Aqua Pastel
     )
 
     init {
@@ -35,12 +37,13 @@ class NoteAdapter(
 
     inner class NoteViewHolder(val binding: ItemNoteBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
         fun bind(note: Note) {
             binding.etTitle.text = note.title
             binding.etDescription.visibility = View.VISIBLE
-
             binding.compactAudioPlayer.visibility = View.GONE
             binding.compactImagePreview.visibility = View.GONE
+            binding.todoPreviewContainer.visibility = View.GONE
 
             val randomColor = pastelColors[adapterPosition % pastelColors.size]
             binding.layoutCard.setCardBackgroundColor(randomColor)
@@ -54,24 +57,49 @@ class NoteAdapter(
                     binding.compactImagePreview.visibility = View.VISIBLE
                     note.imagePath?.let { binding.compactImagePreview.setImage(it) }
                 }
+
                 "audio" -> {
                     binding.etDescription.text =
                         note.textContent.takeUnless { it.isNullOrEmpty() } ?: "🎤 Audio Note"
                     binding.compactAudioPlayer.visibility = View.VISIBLE
                     note.audioPath?.let { binding.compactAudioPlayer.setAudioPath(it) }
                 }
+
                 "drawing" -> {
                     binding.etDescription.text =
                         note.textContent.takeUnless { it.isNullOrEmpty() } ?: "✏️ Drawing Note"
                     binding.compactImagePreview.visibility = View.VISIBLE
                     note.drawingPath?.let { binding.compactImagePreview.setImage(it) }
                 }
-                "todo" -> binding.etDescription.text = "✅ Todo List"
+
+                "todo" -> {
+                    binding.etDescription.visibility = View.GONE
+                    binding.todoPreviewContainer.visibility = View.VISIBLE
+                    setupTodoPreview(note)
+                }
             }
 
+            // Set click listeners
             binding.ivDelete.setOnClickListener { onDeleteClick(note) }
             binding.root.setOnClickListener { onNoteClick(note, randomColor) }
         }
+
+        private fun setupTodoPreview(note: Note) {
+            // Remove any existing preview
+            binding.todoPreviewContainer.removeAllViews()
+
+            // Create new preview view
+            val todoPreviewView = TodoPreviewView(binding.root.context)
+
+            // Add preview view inside container
+            binding.todoPreviewContainer.addView(todoPreviewView)
+
+            // Load TODO items
+            val todoItems = NoteHelper.getTodoItemsFromNote(note)
+            todoPreviewView.setTodoItems(todoItems)
+
+        }
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -92,11 +120,8 @@ class NoteAdapter(
     fun setNotes(newNotes: List<Note>) {
         val diffCallback = NoteDiffCallback(notes, newNotes)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
-
         notes.clear()
         notes.addAll(newNotes)
-
         diffResult.dispatchUpdatesTo(this)
     }
-
 }

@@ -18,6 +18,8 @@ class NoteDiffCallback(
                 old.contentType == new.contentType &&
                 old.audioPath == new.audioPath &&
                 old.imagePath == new.imagePath &&
+                old.drawingPath == new.drawingPath &&
+                old.todoItems == new.todoItems &&
                 old.updatedAt == new.updatedAt
     }
 }

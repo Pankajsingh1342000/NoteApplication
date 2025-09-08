@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <!-- Header with Add button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical"
+        android:background="#F8F9FA"
+        android:elevation="1dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Todo Items"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#333333" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_todo_item"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="+ Add Item"
+            android:textSize="12sp"
+            android:backgroundTint="#4CAF50"
+            app:cornerRadius="18dp"
+            style="@style/Widget.Material3.Button" />
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_todo_items"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="300dp"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        tools:listitem="@layout/item_todo"
+        android:nestedScrollingEnabled="false" />
+
+</LinearLayout>

@@ -7,5 +7,5 @@ enum class ContentType(val value: String, val displayName: String, val iconResId
     AUDIO("audio", "Audio", R.drawable.ic_audio),
     IMAGE("image", "Image", R.drawable.ic_image),
     DRAWING("drawing", "Drawing", R.drawable.ic_drawing),
-    TODO("todo", "List", R.drawable.ic_todo)
+    TODO("todo", "Todo", R.drawable.ic_todo)
 }
